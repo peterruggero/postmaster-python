@@ -1,3 +1,10 @@
+try:
+    import json
+except ImportError:
+    try:
+        import simplejson as json
+    except ImportError:
+        raise
 from .conf import config
 
 __all__ = [
@@ -12,25 +19,26 @@ __all__ = [
 
 HTTP_LIB = None
 
+import urllib
 # Try to import the appropriate HTTP library
 # for the current system.
+#try:
+#    from google.appengine.api import urlfetch
+#    HTTP_LIB = 'urlfetch'
+#except ImportError:
+#    try:
+#        import pycurl
+#        HTTP_LIB = 'pycurl'
+#    except ImportError:
 try:
-    from google.appengine.api import urlfetch
-    HTTP_LIB = 'urlfetch'
+    import urllib2
+    HTTP_LIB = 'urllib2'
 except ImportError:
-    try:
-        import pycurl
-        HTTP_LIB = 'pycurl'
-    except ImportError:
-        try:
-            import urllib2
-            HTTP_LIB = 'urllib2'
-        except ImportError:
-            raise
+    raise
             
 class PostmasterError(Exception):
     def __init__(self, message=None, http_body=None, http_status=None, json_body=None):
-        super(StripeError, self).__init__(message)
+        super(PostmasterError, self).__init__(message)
         self.http_body = http_body
         self.http_status = http_status
         self.json_body = json_body
@@ -89,10 +97,12 @@ class HTTPTransport(object):
     @classmethod  
     def post(cls, url, data=None, headers=None):
         # Pass data in already encoded, valid data is returned as a dict
+        headers = headers if headers else {}
+        headers.update(config.headers)
         if HTTP_LIB == 'urlfetch':
             try:
                 resp = urlfetch.fetch(
-                    '%s%s' % (config.base_url, url), data, method=urlfetch.POST, headers, deadline=10)
+                    '%s%s' % (config.base_url, url), data, method='POST', headers=headers, deadline=10)
             except urlfetch.DownloadError:
                 raise NetworkError("There was a network error.")
             else:
@@ -119,30 +129,78 @@ class HTTPTransport(object):
         elif HTTP_LIB == 'urllib2':
             try:
                 opener = urllib2.build_opener(urllib2.HTTPHandler)
-                request = urllib2.Request('%s%s' % (config.base_url, url), data=data)
-                if headers:
-                    for k,v in headers.iteritems():
-                        request.add_header(k, v)
-                #request.get_method = lambda: 'PUT'
+                if data:
+                    data = json.dumps(data)
+
+                request = urllib2.Request('%s%s' % (config.base_url, url), data=data, headers=headers)
+                request.get_method = lambda: 'POST'
                 resp = opener.open(request, timeout=10)
+                return cls._decode(resp.read(), resp.code)
             except urllib2.HTTPError, e:
                 pass
             
     @classmethod  
-    def put(cls, url, data=None, headers=None):
+    def get(cls, url, data=None, headers=None):
+        headers = headers if headers else {}
+        headers.update(config.headers)
+
         if HTTP_LIB == 'urlfetch':
             pass
         elif HTTP_LIB == 'pycurl':
             pass
         elif HTTP_LIB == 'urllib2':
-            pass
+            try:
+                opener = urllib2.build_opener(urllib2.HTTPHandler)
+                headers['Accept'] = 'application/json'
+                url = '%s%s' % (config.base_url, url)
+                if data:
+                    data = urllib.urlencode(data)
+                    url += ('?%s' % data)
+                request = urllib2.Request(url, headers=headers)
+                request.get_method = lambda: 'GET'
+                resp = opener.open(request, timeout=10)
+                return cls._decode(resp.read(), resp.code)
+            except urllib2.HTTPError, e:
+                pass
 
     @classmethod  
-    def put(cls, url, params=None, headers=None):
+    def put(cls, url, data=None, headers=None):
+        headers = headers if headers else {}
+        headers.update(config.headers)
         if HTTP_LIB == 'urlfetch':
             pass
         elif HTTP_LIB == 'pycurl':
             pass
         elif HTTP_LIB == 'urllib2':
+            try:
+                opener = urllib2.build_opener(urllib2.HTTPHandler)
+                if data:
+                    data = json.dumps(data)
+
+                request = urllib2.Request('%s%s' % (config.base_url, url), data=data, headers=headers)
+                request.get_method = lambda: 'PUT'
+                resp = opener.open(request, timeout=10)
+                return cls._decode(resp.read(), resp.code)
+            except urllib2.HTTPError, e:
+                pass
+
+    @classmethod
+    def delete(cls, url, data=None, headers=None):
+        headers = headers if headers else {}
+        headers.update(config.headers)
+        if HTTP_LIB == 'urlfetch':
             pass
-    
+        elif HTTP_LIB == 'pycurl':
+            pass
+        elif HTTP_LIB == 'urllib2':
+            try:
+                opener = urllib2.build_opener(urllib2.HTTPHandler)
+                if data:
+                    data = json.dumps(data)
+
+                request = urllib2.Request('%s%s' % (config.base_url, url), data=data, headers=headers)
+                request.get_method = lambda: 'DELETE'
+                resp = opener.open(request, timeout=10)
+                return cls._decode(resp.read(), resp.code)
+            except urllib2.HTTPError, e:
+                pass

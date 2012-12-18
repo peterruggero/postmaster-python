@@ -60,7 +60,7 @@ class PostmasterObject(object):
         Get object(s) from server.
         """
         
-        if id_
+        if id_:
             response = HTTPTransport.get(
                 action and '%s/%s/%s' % (self.PATH, id_, action) or \
                     '%s/%s' % (self.PATH, id_), params, headers=config.headers)
@@ -78,7 +78,7 @@ class Rate(PostmasterObject):
 class TimeInTransit(PostmasterObject):
     pass
 
-class AddressValidation(PostmasterOjbect):
+class AddressValidation(PostmasterObject):
     pass
             
 class Shipment(PostmasterObject):

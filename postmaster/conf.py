@@ -1,6 +1,7 @@
 __all__ = ['config']
 
 import threading
+from version import VERSION
 
 class Config(threading.local, object):
 
@@ -12,7 +13,7 @@ class Config(threading.local, object):
         self.headers = {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
-            'User-agent': 'Postmaster/%s (Python)' % VERSION,
+            'User-Agent': 'Postmaster/%s (Python)' % VERSION,
         }
 
 config = Config()
