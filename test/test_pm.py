@@ -1,3 +1,4 @@
+
 import os
 import sys
 import unittest
@@ -15,143 +16,80 @@ from postmaster.http import *
 
 HTTPBIN = os.environ.get('HTTPBIN_URL', 'http://httpbin.org/')
 
-class HttpLibTestCase(unittest.TestCase):
+class PostmasterTestCase(unittest.TestCase):
     def setUp(self):
-        super(HttpLibTestCase, self).setUp()
-        base_url = os.environ.get('PM_API_HOST')
-        #if api_base:
-        #	stripe.base_url = base_url
-        #postmaster.config.api_key = os.environ.get('PM_API_KEY', 'tGN0bIwXnHdwOa85VABjPdSn8nWY7G7I')
-        postmaster.config.base_url = HTTPBIN
+        super(PostmasterTestCase, self).setUp()
+        postmaster.config.base_url = os.environ.get('PM_API_HOST', 'http://localhost:8000')
+        postmaster.config.api_key = os.environ.get('PM_API_KEY', 'pp_MTp4cjdEYnJHTWhCbUR0Yi11a3FuU1czdHhLaWs')
 
-    def testEmptyPost(self):
-        resp = HTTPTransport.post('post')
-        self.assertEqual(resp['data'], '')
-        self.assertDictEqual(resp['args'], {})
-        self.assertEqual(resp['headers']['Content-Type'], 'application/json')
-        self.assertEqual(resp['headers']['Accept'], 'application/json')
-        self.assertEqual(resp['headers']['User-Agent'], postmaster.config.headers['User-Agent'])
+    def testToken(self):
+        token = postmaster.get_token()
+        assert len(token) > 0
 
-    def testPost(self):
-        resp = HTTPTransport.post(
-            'post',
-            data={
-                'postmasterkey1': 'postmastervalue1',
-                'postmasterkey2': 'postmastervalue2'
-            },
-            headers={
-                'Postmastertestheader':'postmastertest'
-            }
+    def testTrack(self):
+        resp = postmaster.track_by_reference('1ZW470V80310800043')
+        assert 'history' in resp
+
+    def testValidate(self):
+        address = postmaster.AddressValidation.create(
+			company='ASLS',
+			contact='Joe Smith',
+			address=['1110 Algarita Ave.'],
+			city='Austin',
+			state='TX',
+			zip_code='78704',
         )
+        resp = address.validate()
 
-        assert 'Postmastertestheader' in resp['headers']
-        self.assertEqual(resp['headers']['Postmastertestheader'], 'postmastertest')
-        self.assertEqual(resp['headers']['Content-Type'], 'application/json')
-        self.assertEqual(resp['headers']['Accept'], 'application/json')
-        self.assertEqual(resp['json']['postmasterkey1'], 'postmastervalue1')
-        self.assertEqual(resp['json']['postmasterkey2'], 'postmastervalue2')
-
-    def testEmptyGet(self):
-        resp = HTTPTransport.get('get')
-        assert 'data' not in resp
-        self.assertDictEqual(resp['args'], {})
-        self.assertEqual(resp['headers']['Content-Type'], 'application/json')
-        self.assertEqual(resp['headers']['Accept'], 'application/json')
-        self.assertEqual(resp['headers']['User-Agent'], postmaster.config.headers['User-Agent'])
-
-    def testGet(self):
-        resp = HTTPTransport.get(
-            'get',
-            data={
-                'postmasterkey1': 'postmastervalue1',
-                'postmasterkey2': 'postmastervalue2'
+    def testShipmentCreateRetrive(self):
+        shipment1 = postmaster.Shipment.create(
+            to={
+                'company':'ASLS',
+                'contact':'Joe Smith',
+                'line1':'1110 Algarita Ave.',
+                'city':'Austin',
+                'state':'TX',
+                'zip_code':'78704',
+                'phone_no':'919-720-7941'
             },
-            headers={
-                'Postmastertestheader':'postmastertest'
-            }
-        )
-
-        assert 'Postmastertestheader' in resp['headers']
-        self.assertEqual(resp['headers']['Postmastertestheader'], 'postmastertest')
-        self.assertEqual(resp['headers']['Content-Type'], 'application/json')
-        self.assertEqual(resp['headers']['Accept'], 'application/json')
-        self.assertEqual(resp['args']['postmasterkey1'], 'postmastervalue1')
-        self.assertEqual(resp['args']['postmasterkey2'], 'postmastervalue2')
-        assert 'data' not in resp
-
-    def testEmptyPut(self):
-        resp = HTTPTransport.put('put')
-        self.assertEqual(resp['data'], '')
-        self.assertDictEqual(resp['args'], {})
-        self.assertEqual(resp['headers']['Content-Type'], 'application/json')
-        self.assertEqual(resp['headers']['Accept'], 'application/json')
-        self.assertEqual(resp['headers']['User-Agent'], postmaster.config.headers['User-Agent'])
-
-    def testPut(self):
-        resp = HTTPTransport.put(
-            'put',
-            data={
-                'postmasterkey1': 'postmastervalue1',
-                'postmasterkey2': 'postmastervalue2'
+            package={
+                'weight':1.5,
+                'length':10,
+                'width':6,
+                'height':8,
             },
-            headers={
-                'Postmastertestheader':'postmastertest'
-            }
+            carrier='fedex',
+            service='2DAY',
         )
+        shipment2 = postmaster.Shipment.retrieve(shipment1.id)
+        self.assertEqual(shipment1.id, shipment2.id)
 
-        assert 'Postmastertestheader' in resp['headers']
-        self.assertEqual(resp['headers']['Postmastertestheader'], 'postmastertest')
-        self.assertEqual(resp['headers']['Content-Type'], 'application/json')
-        self.assertEqual(resp['headers']['Accept'], 'application/json')
-        self.assertEqual(resp['json']['postmasterkey1'], 'postmastervalue1')
-        self.assertEqual(resp['json']['postmasterkey2'], 'postmastervalue2')
-
-    def testEmptyDelete(self):
-        resp = HTTPTransport.delete('delete')
-        self.assertEqual(resp['data'], '')
-        self.assertDictEqual(resp['args'], {})
-        self.assertEqual(resp['headers']['Content-Type'], 'application/json')
-        self.assertEqual(resp['headers']['Accept'], 'application/json')
-        self.assertEqual(resp['headers']['User-Agent'], postmaster.config.headers['User-Agent'])
-
-    def testDelete(self):
-        resp = HTTPTransport.delete(
-            'delete',
-            data={
-                'postmasterkey1': 'postmastervalue1',
-                'postmasterkey2': 'postmastervalue2'
+    def testShipmentTrack(self):
+        shipment = postmaster.Shipment.create(
+            to={
+                'company':'ASLS',
+                'contact':'Joe Smith',
+                'line1':'1110 Algarita Ave.',
+                'city':'Austin',
+                'state':'TX',
+                'zip_code':'78704',
+                'phone_no':'919-720-7941'
             },
-            headers={
-                'Postmastertestheader':'postmastertest'
-            }
+            package={
+                'weight':1.5,
+                'length':10,
+                'width':6,
+                'height':8,
+                },
+            carrier='fedex',
+            service='2DAY',
         )
+        resp = shipment.track()
 
-        assert 'Postmastertestheader' in resp['headers']
-        self.assertEqual(resp['headers']['Postmastertestheader'], 'postmastertest')
-        self.assertEqual(resp['headers']['Content-Type'], 'application/json')
-        self.assertEqual(resp['headers']['Accept'], 'application/json')
-        self.assertEqual(resp['json']['postmasterkey1'], 'postmastervalue1')
-        self.assertEqual(resp['json']['postmasterkey2'], 'postmastervalue2')
-
-    def testStatusCodes(self):
-        data = json.dumps({'message':'def'})
-        self.assertRaises(APIError, HTTPTransport._decode, data, 500)
-        self.assertRaises(InvalidDataError, HTTPTransport._decode, data, 400)
-        self.assertRaises(AuthenticationError, HTTPTransport._decode, data, 401)
-        self.assertRaises(PermissionError, HTTPTransport._decode, data, 403)
-
-        try:
-            HTTPTransport._decode(data, 400)
-        except InvalidDataError as e:
-            self.assertEqual(e.message, 'def')
-            self.assertEqual(e.json_body, data)
-        try:
-            HTTPTransport._decode(data, 401)
-        except AuthenticationError as e:
-            self.assertEqual(e.message, 'def')
-            self.assertEqual(e.json_body, data)
-        try:
-            HTTPTransport._decode(data, 403)
-        except PermissionError as e:
-            self.assertEqual(e.message, 'def')
-            self.assertEqual(e.json_body, data)
+    def testTimes(self):
+        resp = postmaster.get_transit_time(
+            '78704',
+            '28806',
+            '5',
+        )
+        import ipdb; ipdb.set_trace()

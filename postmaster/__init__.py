@@ -14,6 +14,7 @@ except ImportError:
     except ImportError:
         raise
 
+
 class PostmasterObject(object):
     """
     Base object for Postmaster.  Allows slightly easlier access to data and
@@ -48,11 +49,9 @@ class PostmasterObject(object):
             response = HTTPTransport.put(
                 action and '%s/%s/%s' % (self.PATH, id_, action) or \
                     '%s/%s' % (self.PATH, id_),
-                json.dumps(self._data), headers=config.headers)
+                self._data, headers=config.headers)
         else:
-            response = HTTPTransport.post(
-                self.PATH, 
-                json.dumps(self._data), headers=config.headers)
+            response = HTTPTransport.post(self.PATH, self._data, headers=config.headers)
         return response
         
     def get(self, id_=None, action=None, params=None):
@@ -79,11 +78,34 @@ class TimeInTransit(PostmasterObject):
     pass
 
 class AddressValidation(PostmasterObject):
-    pass
-            
+
+    PATH = '/api/v1/validate'
+
+    @classmethod
+    def create(cls, company=None, contact=None, address=[], city=None, state=None, zip_code=None, country=None):
+        address_obj = cls()
+        data = {}
+        data['company'] = company
+        data['contact'] = contact
+        data['line1'] = address[0]
+        if len(address) > 1:
+            data['line2'] = address[1]
+        if len(address) > 2:
+            data['line3'] = address[2]
+        data['city'] = city
+        data['state'] = state
+        data['zip_code'] = zip_code
+        data['country'] = country
+        address_obj._data = data
+        return address_obj
+
+    def validate(self):
+        return self.put()
+
+
 class Shipment(PostmasterObject):
     
-    PATH = '/v1/shipments'
+    PATH = '/api/v1/shipments'
     
     @classmethod
     def create(cls, to, package, from_=None, carrier=None, service=None, reference=None):
@@ -126,6 +148,7 @@ class Shipment(PostmasterObject):
         """
         shipment = Shipment()
         shipment._data = shipment.get(package_id)
+        return shipment
        
     def track(self):
         """
@@ -146,24 +169,32 @@ def track_by_reference(tracking_number):
     the resulting data will not contain detailed information
     about the shipment.
     """
-    pass
-    
+    return HTTPTransport.get('/api/v1/track', dict(tracking=tracking_number))
+
 def validate_address(address_object):
     """
     Validate that an address is correct.
     """
     pass
     
-def get_transit_time(to, from_=None, service='ground', carrier=None):
+def get_transit_time(from_zip, to_zip, weight, carrier=None):
     """
     Find the time needed for a package to get from point A to point B
     with a given service level.
     """
-    pass
-    
+    return HTTPTransport.post('/api/v1/times', {
+        'from_zip': from_zip,
+        'to_zip': to_zip,
+        'weight': weight,
+        'carrier': carrier,
+    })
+
 def get_rate(carrier, to, from_=None, service='ground'):
     """
     Find the cost to ship a package from point A to point B.
     """
     pass
+
+def get_token():
+    return HTTPTransport.get('/api/v1/token')
     
