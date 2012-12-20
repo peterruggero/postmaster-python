@@ -58,7 +58,7 @@ class PostmasterObject(object):
         """
         Get object(s) from server.
         """
-        
+
         if id_:
             response = HTTPTransport.get(
                 action and '%s/%s/%s' % (self.PATH, id_, action) or \
@@ -72,10 +72,10 @@ class Tracking(PostmasterObject):
     pass
 
 class Rate(PostmasterObject):
-    pass
+    PATH = '/api/v1/rates'
 
 class TimeInTransit(PostmasterObject):
-    pass
+    PATH = '/api/v1/times'
 
 class AddressValidation(PostmasterObject):
 
@@ -174,29 +174,31 @@ def validate_address(address_object):
     Validate that an address is correct.
     """
     pass
-    
+
 def get_transit_time(from_zip, to_zip, weight, carrier=None):
     """
     Find the time needed for a package to get from point A to point B
     """
-    return HTTPTransport.post('/api/v1/times', {
-        'from_zip': from_zip,
-        'to_zip': to_zip,
-        'weight': weight,
-        'carrier': carrier,
-    })
+    tit = TimeInTransit(
+        from_zip=from_zip,
+        to_zip=to_zip,
+        weight=weight,
+        carrier=carrier,
+    )
+    return tit.put()
 
 def get_rate(carrier, to_zip, weight, from_zip=None, service='ground'):
     """
     Find the cost to ship a package from point A to point B.
     """
-    return HTTPTransport.post('/api/v1/rates', {
-        'from_zip': from_zip,
-        'to_zip': to_zip,
-        'weight': weight,
-        'carrier': carrier,
-        'service': service,
-        })
+    rate = Rate(
+        from_zip=from_zip,
+        to_zip=to_zip,
+        weight=weight,
+        carrier=carrier,
+        service=service,
+    )
+    return rate.put()
 
 def get_token():
     return HTTPTransport.get('/api/v1/token')
