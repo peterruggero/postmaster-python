@@ -1,3 +1,4 @@
+import urllib
 try:
     import json
 except ImportError:
@@ -19,23 +20,31 @@ __all__ = [
 
 HTTP_LIB = None
 
-import urllib
 # Try to import the appropriate HTTP library
 # for the current system.
-#try:
-#    from google.appengine.api import urlfetch
-#    HTTP_LIB = 'urlfetch'
-#except ImportError:
-#    try:
-#        import pycurl
-#        HTTP_LIB = 'pycurl'
-#    except ImportError:
 try:
-    import urllib2
-    HTTP_LIB = 'urllib2'
+    from google.appengine.api import urlfetch
+    HTTP_LIB = 'urlfetch'
 except ImportError:
-    raise
-            
+    try:
+        import pycurl
+        HTTP_LIB = 'pycurl'
+    except ImportError:
+        try:
+            import urllib2
+            HTTP_LIB = 'urllib2'
+        except ImportError:
+            raise
+else:
+    # it could be testing instance, import all libraries
+    # each TestCase will choose one using HTTP_LIB
+    try:
+        import pycurl
+        import urllib2
+    except ImportError:
+        pass
+
+
 class PostmasterError(Exception):
     def __init__(self, message=None, http_body=None, http_status=None, json_body=None):
         super(PostmasterError, self).__init__(message)
@@ -101,8 +110,10 @@ class HTTPTransport(object):
         headers.update(config.headers)
         if HTTP_LIB == 'urlfetch':
             try:
-                resp = urlfetch.fetch(
-                    '%s%s' % (config.base_url, url), data, method='POST', headers=headers, deadline=10)
+                if data:
+                    data = json.dumps(data)
+                url = '%s%s' % (config.base_url, url)
+                resp = urlfetch.fetch(url, data, method='POST', headers=headers, deadline=10)
             except urlfetch.DownloadError:
                 raise NetworkError("There was a network error.")
             else:
@@ -110,22 +121,28 @@ class HTTPTransport(object):
                 
         elif HTTP_LIB == 'pycurl':
             import StringIO
-            fout = StringIO.String()
+            buf = StringIO.StringIO()
             try:
                 c = pycurl.Curl()
-                c.setopt(pycurl.WRITEFUNCTION, fout.write)
+                c.setopt(pycurl.CONNECTTIMEOUT, 10)
+                c.setopt(pycurl.TIMEOUT, 10)
+                c.setopt(pycurl.WRITEFUNCTION, buf.write)
                 c.setopt(pycurl.POST, 1)
-                c.setopt(pycurl.POSTFIELDS, data)
-                c.setopt(c.URL, '%s%s' % (config.base_url, url))
+                if data:
+                    data = json.dumps(data)
+                c.setopt(pycurl.POSTFIELDS, data or '')
+                url = '%s%s' % (config.base_url, url)
+                c.setopt(c.URL, url)
                 if headers:
                     c.setopt(c.HTTPHEADER, ['%s: %s' % (k,v) for k,v in headers.iteritems()])
+                c.setopt(c.FAILONERROR, True)
                 c.perform()
+                status_code = c.getinfo(pycurl.HTTP_CODE)
                 c.close()
             except pycurl.error, error:
                 errno, errstr = error
             else:
-                return cls._decode(fout.getvalue(), c.getinfo(pycurl.HTTP_CODE))
-                
+                return cls._decode(buf.getvalue(), status_code)
         elif HTTP_LIB == 'urllib2':
             try:
                 opener = urllib2.build_opener(urllib2.HTTPHandler)
@@ -145,9 +162,40 @@ class HTTPTransport(object):
         headers.update(config.headers)
 
         if HTTP_LIB == 'urlfetch':
-            pass
+            try:
+                url = '%s%s' % (config.base_url, url)
+                if data:
+                    data = urllib.urlencode(data)
+                    url += ('?%s' % data)
+
+                resp = urlfetch.fetch(url, method='GET', headers=headers, deadline=10)
+            except urlfetch.DownloadError:
+                raise NetworkError("There was a network error.")
+            else:
+                return cls._decode(resp.content, resp.status_code)
         elif HTTP_LIB == 'pycurl':
-            pass
+            import StringIO
+            buf = StringIO.StringIO()
+            try:
+                c = pycurl.Curl()
+                c.setopt(pycurl.CONNECTTIMEOUT, 10)
+                c.setopt(pycurl.TIMEOUT, 10)
+                c.setopt(pycurl.WRITEFUNCTION, buf.write)
+                url = '%s%s' % (config.base_url, url)
+                if data:
+                    data = urllib.urlencode(data)
+                    url += ('?%s' % data)
+                c.setopt(c.URL, url)
+                if headers:
+                    c.setopt(c.HTTPHEADER, ['%s: %s' % (k,v) for k,v in headers.iteritems()])
+                c.setopt(c.FAILONERROR, True)
+                c.perform()
+                status_code = c.getinfo(pycurl.HTTP_CODE)
+                c.close()
+            except pycurl.error, error:
+                errno, errstr = error
+            else:
+                return cls._decode(buf.getvalue(), status_code)
         elif HTTP_LIB == 'urllib2':
             try:
                 opener = urllib2.build_opener(urllib2.HTTPHandler)
@@ -168,9 +216,40 @@ class HTTPTransport(object):
         headers = headers if headers else {}
         headers.update(config.headers)
         if HTTP_LIB == 'urlfetch':
-            pass
+            try:
+                if data:
+                    data = json.dumps(data)
+                url = '%s%s' % (config.base_url, url)
+                resp = urlfetch.fetch(url, data, method='PUT', headers=headers, deadline=10)
+            except urlfetch.DownloadError:
+                raise NetworkError("There was a network error.")
+            else:
+                return cls._decode(resp.content, resp.status_code)
         elif HTTP_LIB == 'pycurl':
-            pass
+            import StringIO
+            buf = StringIO.StringIO()
+            try:
+                c = pycurl.Curl()
+                c.setopt(pycurl.CONNECTTIMEOUT, 10)
+                c.setopt(pycurl.TIMEOUT, 10)
+                c.setopt(pycurl.WRITEFUNCTION, buf.write)
+                c.setopt(pycurl.PUT, 1)
+                c.setopt(c.VERBOSE, True)
+                if data:
+                    data = json.dumps(data)
+                c.setopt(pycurl.POSTFIELDS, data or '')
+                url = '%s%s' % (config.base_url, url)
+                c.setopt(c.URL, url)
+                if headers:
+                    c.setopt(c.HTTPHEADER, ['%s: %s' % (k,v) for k,v in headers.iteritems()])
+                c.setopt(c.FAILONERROR, True)
+                c.perform()
+                status_code = c.getinfo(pycurl.HTTP_CODE)
+                c.close()
+            except pycurl.error, error:
+                errno, errstr = error
+            else:
+                return cls._decode(buf.getvalue(), status_code)
         elif HTTP_LIB == 'urllib2':
             try:
                 opener = urllib2.build_opener(urllib2.HTTPHandler)
@@ -189,9 +268,42 @@ class HTTPTransport(object):
         headers = headers if headers else {}
         headers.update(config.headers)
         if HTTP_LIB == 'urlfetch':
-            pass
+            try:
+                if data:
+                    data = json.dumps(data)
+                ## urlfetch doesn't allow you to send body when performing DELETE request
+                ## issue : http://code.google.com/p/googleappengine/issues/detail?id=601
+                url = '%s%s' % (config.base_url, url)
+                resp = urlfetch.fetch(url, data, method='DELETE', headers=headers, deadline=10)
+            except urlfetch.DownloadError:
+                raise NetworkError("There was a network error.")
+            else:
+                return cls._decode(resp.content, resp.status_code)
         elif HTTP_LIB == 'pycurl':
-            pass
+            import StringIO
+            buf = StringIO.StringIO()
+            try:
+                c = pycurl.Curl()
+                c.setopt(pycurl.CONNECTTIMEOUT, 10)
+                c.setopt(pycurl.TIMEOUT, 10)
+                c.setopt(pycurl.WRITEFUNCTION, buf.write)
+                c.setopt(pycurl.PUT, 1)
+                c.setopt(c.VERBOSE, True)
+                if data:
+                    data = json.dumps(data)
+                c.setopt(pycurl.POSTFIELDS, data or '')
+                url = '%s%s' % (config.base_url, url)
+                c.setopt(c.URL, url)
+                if headers:
+                    c.setopt(c.HTTPHEADER, ['%s: %s' % (k,v) for k,v in headers.iteritems()])
+                c.setopt(c.FAILONERROR, True)
+                c.perform()
+                status_code = c.getinfo(pycurl.HTTP_CODE)
+                c.close()
+            except pycurl.error, error:
+                errno, errstr = error
+            else:
+                return cls._decode(buf.getvalue(), status_code)
         elif HTTP_LIB == 'urllib2':
             try:
                 opener = urllib2.build_opener(urllib2.HTTPHandler)

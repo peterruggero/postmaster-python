@@ -15,13 +15,10 @@ from postmaster.http import *
 
 HTTPBIN = os.environ.get('HTTPBIN_URL', 'http://httpbin.org/')
 
-class HttpLibTestCase(unittest.TestCase):
+class UrlLib2TestCase(unittest.TestCase):
     def setUp(self):
-        super(HttpLibTestCase, self).setUp()
-        base_url = os.environ.get('PM_API_HOST')
-        #if api_base:
-        #	stripe.base_url = base_url
-        #postmaster.config.api_key = os.environ.get('PM_API_KEY', 'tGN0bIwXnHdwOa85VABjPdSn8nWY7G7I')
+        super(UrlLib2TestCase, self).setUp()
+        postmaster.http.HTTP_LIB = 'urllib2'
         postmaster.config.base_url = HTTPBIN
 
     def testEmptyPost(self):
@@ -30,7 +27,7 @@ class HttpLibTestCase(unittest.TestCase):
         self.assertDictEqual(resp['args'], {})
         self.assertEqual(resp['headers']['Content-Type'], 'application/json')
         self.assertEqual(resp['headers']['Accept'], 'application/json')
-        self.assertEqual(resp['headers']['User-Agent'], postmaster.config.headers['User-Agent'])
+        self.assertIn(postmaster.config.headers['User-Agent'], resp['headers']['User-Agent'])
 
     def testPost(self):
         resp = HTTPTransport.post(
@@ -56,7 +53,7 @@ class HttpLibTestCase(unittest.TestCase):
         self.assertDictEqual(resp['args'], {})
         self.assertEqual(resp['headers']['Content-Type'], 'application/json')
         self.assertEqual(resp['headers']['Accept'], 'application/json')
-        self.assertEqual(resp['headers']['User-Agent'], postmaster.config.headers['User-Agent'])
+        self.assertIn(postmaster.config.headers['User-Agent'], resp['headers']['User-Agent'])
 
     def testGet(self):
         resp = HTTPTransport.get(
@@ -84,7 +81,7 @@ class HttpLibTestCase(unittest.TestCase):
         self.assertDictEqual(resp['args'], {})
         self.assertEqual(resp['headers']['Content-Type'], 'application/json')
         self.assertEqual(resp['headers']['Accept'], 'application/json')
-        self.assertEqual(resp['headers']['User-Agent'], postmaster.config.headers['User-Agent'])
+        self.assertIn(postmaster.config.headers['User-Agent'], resp['headers']['User-Agent'])
 
     def testPut(self):
         resp = HTTPTransport.put(
@@ -111,7 +108,7 @@ class HttpLibTestCase(unittest.TestCase):
         self.assertDictEqual(resp['args'], {})
         self.assertEqual(resp['headers']['Content-Type'], 'application/json')
         self.assertEqual(resp['headers']['Accept'], 'application/json')
-        self.assertEqual(resp['headers']['User-Agent'], postmaster.config.headers['User-Agent'])
+        self.assertIn(postmaster.config.headers['User-Agent'], resp['headers']['User-Agent'])
 
     def testDelete(self):
         resp = HTTPTransport.delete(

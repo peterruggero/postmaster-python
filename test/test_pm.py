@@ -19,6 +19,7 @@ HTTPBIN = os.environ.get('HTTPBIN_URL', 'http://httpbin.org/')
 class PostmasterTestCase(unittest.TestCase):
     def setUp(self):
         super(PostmasterTestCase, self).setUp()
+        postmaster.http.HTTP_LIB = 'urllib2'
         postmaster.config.base_url = os.environ.get('PM_API_HOST', 'http://localhost:8000')
         postmaster.config.api_key = os.environ.get('PM_API_KEY', 'pp_MTp4cjdEYnJHTWhCbUR0Yi11a3FuU1czdHhLaWs')
 
