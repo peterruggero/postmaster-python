@@ -81,23 +81,21 @@ class AddressValidation(PostmasterObject):
 
     PATH = '/api/v1/validate'
 
-    @classmethod
-    def create(cls, company=None, contact=None, address=[], city=None, state=None, zip_code=None, country=None):
-        address_obj = cls()
-        data = {}
-        data['company'] = company
-        data['contact'] = contact
-        data['line1'] = address[0]
+    def __init__(self, company=None, contact=None, address=[], city=None, state=None, zip_code=None, country=None):
+        kwargs = dict(
+            company=company,
+            contact=contact,
+            line1=address[0],
+            city=city,
+            state=state,
+            zip_code=zip_code,
+            country=country
+        )
         if len(address) > 1:
-            data['line2'] = address[1]
+            kwargs['line2'] = address[1]
         if len(address) > 2:
-            data['line3'] = address[2]
-        data['city'] = city
-        data['state'] = state
-        data['zip_code'] = zip_code
-        data['country'] = country
-        address_obj._data = data
-        return address_obj
+            kwargs['line3'] = address[2]
+        super(AddressValidation, self).__init__(**kwargs)
 
     def validate(self):
         return self.put()
@@ -180,7 +178,6 @@ def validate_address(address_object):
 def get_transit_time(from_zip, to_zip, weight, carrier=None):
     """
     Find the time needed for a package to get from point A to point B
-    with a given service level.
     """
     return HTTPTransport.post('/api/v1/times', {
         'from_zip': from_zip,
@@ -189,11 +186,17 @@ def get_transit_time(from_zip, to_zip, weight, carrier=None):
         'carrier': carrier,
     })
 
-def get_rate(carrier, to, from_=None, service='ground'):
+def get_rate(carrier, to_zip, weight, from_zip=None, service='ground'):
     """
     Find the cost to ship a package from point A to point B.
     """
-    pass
+    return HTTPTransport.post('/api/v1/rates', {
+        'from_zip': from_zip,
+        'to_zip': to_zip,
+        'weight': weight,
+        'carrier': carrier,
+        'service': service,
+        })
 
 def get_token():
     return HTTPTransport.get('/api/v1/token')

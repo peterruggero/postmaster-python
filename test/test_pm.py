@@ -31,7 +31,7 @@ class PostmasterTestCase(unittest.TestCase):
         assert 'history' in resp
 
     def testValidate(self):
-        address = postmaster.AddressValidation.create(
+        address = postmaster.AddressValidation(
 			company='ASLS',
 			contact='Joe Smith',
 			address=['1110 Algarita Ave.'],
@@ -40,6 +40,7 @@ class PostmasterTestCase(unittest.TestCase):
 			zip_code='78704',
         )
         resp = address.validate()
+        assert resp is not None
 
     def testShipmentCreateRetrive(self):
         shipment1 = postmaster.Shipment.create(
@@ -58,7 +59,7 @@ class PostmasterTestCase(unittest.TestCase):
                 'width':6,
                 'height':8,
             },
-            carrier='fedex',
+            carrier='ups',
             service='2DAY',
         )
         shipment2 = postmaster.Shipment.retrieve(shipment1.id)
@@ -85,11 +86,22 @@ class PostmasterTestCase(unittest.TestCase):
             service='2DAY',
         )
         resp = shipment.track()
+        assert resp is not None
 
     def testTimes(self):
         resp = postmaster.get_transit_time(
             '78704',
             '28806',
             '5',
+            'ups'
         )
-        import ipdb; ipdb.set_trace()
+        assert resp is not None
+
+    def testRates(self):
+        resp = postmaster.get_rate(
+            'ups',
+            '78704',
+            '5',
+            '28806',
+        )
+        assert resp is not None
