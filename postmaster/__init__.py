@@ -14,6 +14,7 @@ except ImportError:
     except ImportError:
         raise
 
+
 class PostmasterObject(object):
     """
     Base object for Postmaster.  Allows slightly easlier access to data and
@@ -48,19 +49,17 @@ class PostmasterObject(object):
             response = HTTPTransport.put(
                 action and '%s/%s/%s' % (self.PATH, id_, action) or \
                     '%s/%s' % (self.PATH, id_),
-                json.dumps(self._data), headers=config.headers)
+                self._data, headers=config.headers)
         else:
-            response = HTTPTransport.post(
-                self.PATH, 
-                json.dumps(self._data), headers=config.headers)
+            response = HTTPTransport.post(self.PATH, self._data, headers=config.headers)
         return response
         
     def get(self, id_=None, action=None, params=None):
         """
         Get object(s) from server.
         """
-        
-        if id_
+
+        if id_:
             response = HTTPTransport.get(
                 action and '%s/%s/%s' % (self.PATH, id_, action) or \
                     '%s/%s' % (self.PATH, id_), params, headers=config.headers)
@@ -73,17 +72,38 @@ class Tracking(PostmasterObject):
     pass
 
 class Rate(PostmasterObject):
-    pass
+    PATH = '/api/v1/rates'
 
 class TimeInTransit(PostmasterObject):
-    pass
+    PATH = '/api/v1/times'
 
-class AddressValidation(PostmasterOjbect):
-    pass
-            
+class AddressValidation(PostmasterObject):
+
+    PATH = '/api/v1/validate'
+
+    def __init__(self, company=None, contact=None, address=[], city=None, state=None, zip_code=None, country=None):
+        kwargs = dict(
+            company=company,
+            contact=contact,
+            line1=address[0],
+            city=city,
+            state=state,
+            zip_code=zip_code,
+            country=country
+        )
+        if len(address) > 1:
+            kwargs['line2'] = address[1]
+        if len(address) > 2:
+            kwargs['line3'] = address[2]
+        super(AddressValidation, self).__init__(**kwargs)
+
+    def validate(self):
+        return self.put()
+
+
 class Shipment(PostmasterObject):
     
-    PATH = '/v1/shipments'
+    PATH = '/api/v1/shipments'
     
     @classmethod
     def create(cls, to, package, from_=None, carrier=None, service=None, reference=None):
@@ -126,6 +146,7 @@ class Shipment(PostmasterObject):
         """
         shipment = Shipment()
         shipment._data = shipment.get(package_id)
+        return shipment
        
     def track(self):
         """
@@ -146,24 +167,39 @@ def track_by_reference(tracking_number):
     the resulting data will not contain detailed information
     about the shipment.
     """
-    pass
-    
+    return HTTPTransport.get('/api/v1/track', dict(tracking=tracking_number))
+
 def validate_address(address_object):
     """
     Validate that an address is correct.
     """
     pass
-    
-def get_transit_time(to, from_=None, service='ground', carrier=None):
+
+def get_transit_time(from_zip, to_zip, weight, carrier=None):
     """
     Find the time needed for a package to get from point A to point B
-    with a given service level.
     """
-    pass
-    
-def get_rate(carrier, to, from_=None, service='ground'):
+    tit = TimeInTransit(
+        from_zip=from_zip,
+        to_zip=to_zip,
+        weight=weight,
+        carrier=carrier,
+    )
+    return tit.put()
+
+def get_rate(carrier, to_zip, weight, from_zip=None, service='ground'):
     """
     Find the cost to ship a package from point A to point B.
     """
-    pass
+    rate = Rate(
+        from_zip=from_zip,
+        to_zip=to_zip,
+        weight=weight,
+        carrier=carrier,
+        service=service,
+    )
+    return rate.put()
+
+def get_token():
+    return HTTPTransport.get('/api/v1/token')
     
