@@ -234,10 +234,16 @@ class HTTPTransport(object):
                 c.setopt(pycurl.TIMEOUT, 10)
                 c.setopt(pycurl.WRITEFUNCTION, buf.write)
                 c.setopt(pycurl.PUT, 1)
-                c.setopt(c.VERBOSE, True)
+
                 if data:
                     data = json.dumps(data)
-                c.setopt(pycurl.POSTFIELDS, data or '')
+                    data_io = StringIO.StringIO(data)
+                    content_length = len(data)
+                    c.setopt(pycurl.READFUNCTION, data_io.read)
+                    c.setopt(pycurl.INFILESIZE, content_length)
+                else:
+                    c.setopt(pycurl.INFILESIZE, 0)
+
                 url = '%s%s' % (config.base_url, url)
                 c.setopt(c.URL, url)
                 if headers:
@@ -271,6 +277,7 @@ class HTTPTransport(object):
             try:
                 if data:
                     data = json.dumps(data)
+                    raise NotImplementedError
                 ## urlfetch doesn't allow you to send body when performing DELETE request
                 ## issue : http://code.google.com/p/googleappengine/issues/detail?id=601
                 url = '%s%s' % (config.base_url, url)
@@ -287,11 +294,11 @@ class HTTPTransport(object):
                 c.setopt(pycurl.CONNECTTIMEOUT, 10)
                 c.setopt(pycurl.TIMEOUT, 10)
                 c.setopt(pycurl.WRITEFUNCTION, buf.write)
-                c.setopt(pycurl.PUT, 1)
-                c.setopt(c.VERBOSE, True)
+                c.setopt(pycurl.CUSTOMREQUEST, 'DELETE')
                 if data:
-                    data = json.dumps(data)
-                c.setopt(pycurl.POSTFIELDS, data or '')
+                    raise NotImplementedError
+                else:
+                    c.setopt(pycurl.INFILESIZE, 0)
                 url = '%s%s' % (config.base_url, url)
                 c.setopt(c.URL, url)
                 if headers:

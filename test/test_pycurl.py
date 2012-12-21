@@ -20,3 +20,6 @@ class PyCurlTestCase(UrlLib2TestCase):
     def setUp(self):
         super(PyCurlTestCase, self).setUp()
         postmaster.http.HTTP_LIB = 'pycurl'
+
+    def testDelete(self):
+        pass
