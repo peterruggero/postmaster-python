@@ -16,9 +16,9 @@ from postmaster.http import *
 
 HTTPBIN = os.environ.get('HTTPBIN_URL', 'http://httpbin.org/')
 
-class PostmasterTestCase(unittest.TestCase):
+class PostmasterTestCase_Urllib2(unittest.TestCase):
     def setUp(self):
-        super(PostmasterTestCase, self).setUp()
+        super(PostmasterTestCase_Urllib2, self).setUp()
         postmaster.http.HTTP_LIB = 'urllib2'
         postmaster.config.base_url = os.environ.get('PM_API_HOST', 'http://localhost:8000')
         postmaster.config.api_key = os.environ.get('PM_API_KEY', 'pp_MTp4cjdEYnJHTWhCbUR0Yi11a3FuU1czdHhLaWs')
@@ -107,3 +107,19 @@ class PostmasterTestCase(unittest.TestCase):
             '28806',
         )
         assert resp is not None
+
+
+class PostmasterTestCase_Urlfetch(PostmasterTestCase_Urllib2):
+    def setUp(self):
+        super(PostmasterTestCase_Urlfetch, self).setUp()
+        from google.appengine.api import apiproxy_stub_map, urlfetch_stub
+
+        apiproxy_stub_map.apiproxy = apiproxy_stub_map.APIProxyStubMap()
+        apiproxy_stub_map.apiproxy.RegisterStub('urlfetch', urlfetch_stub.URLFetchServiceStub())
+        postmaster.http.HTTP_LIB = 'urlfetch'
+
+
+class PostmasterTestCase_Pycurl(PostmasterTestCase_Urllib2):
+    def setUp(self):
+        super(PostmasterTestCase_Pycurl, self).setUp()
+        postmaster.http.HTTP_LIB = 'pycurl'
