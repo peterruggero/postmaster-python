@@ -85,17 +85,17 @@ class Address(PostmasterObject):
         kwargs = dict(
             company=company,
             contact=contact,
-            line1=address[0],
+            line1=isinstance(address, list) and address[0] or address,
             city=city,
             state=state,
             zip_code=zip_code,
             country=country
         )
-        if len(address) > 1:
+        if isinstance(address, list) and len(address) > 1:
             kwargs['line2'] = address[1]
-        if len(address) > 2:
+        if isinstance(address, list) and len(address) > 2:
             kwargs['line3'] = address[2]
-        super(AddressValidation, self).__init__(**kwargs)
+        super(Address, self).__init__(**kwargs)
 
     def validate(self):
         return self.put()

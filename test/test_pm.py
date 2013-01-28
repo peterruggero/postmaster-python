@@ -2,6 +2,9 @@
 import os
 import sys
 import unittest
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 try:
     import json
 except ImportError:
@@ -33,12 +36,12 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
 
     def testValidate(self):
         address = postmaster.Address(
-			company='ASLS',
-			contact='Joe Smith',
-			address=['1110 Algarita Ave.'],
-			city='Austin',
-			state='TX',
-			zip_code='78704',
+            company='ASLS',
+            contact='Joe Smith',
+            address=['1110 Algarita Ave.'],
+            city='Austin',
+            state='TX',
+            zip_code='78704',
         )
         resp = address.validate()
         assert resp is not None
@@ -123,3 +126,6 @@ class PostmasterTestCase_Pycurl(PostmasterTestCase_Urllib2):
     def setUp(self):
         super(PostmasterTestCase_Pycurl, self).setUp()
         postmaster.http.HTTP_LIB = 'pycurl'
+
+if __name__ == '__main__':
+    unittest.main()

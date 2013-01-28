@@ -37,15 +37,15 @@ except ImportError:
             HTTP_LIB = 'urllib2'
         except ImportError:
             raise
-else:
+
+try:
     # it could be testing instance, import all libraries
     # each TestCase will choose one using HTTP_LIB
-    try:
-        import pycurl
-        import urllib2
-    except ImportError:
-        pass
-
+    import urllib2
+    import pycurl
+    from google.appengine.api import urlfetch
+except ImportError:
+    pass
 
 class PostmasterError(Exception):
     def __init__(self, message=None, http_body=None, http_status=None, json_body=None):
@@ -93,15 +93,17 @@ class HTTPTransport(object):
             
         try:
             data = json.loads(response_data)
-        except ValueErrror:
+            if response_code > 299:
+                data = data['message']
+        except (ValueError, KeyError):
             data = response_data
             
         if response_code == 400:
-            raise InvalidDataError(data['message'], json_body=response_data)
+            raise InvalidDataError(data, json_body=response_data)
         elif response_code == 401:
-            raise AuthenticationError(data['message'], json_body=response_data)
+            raise AuthenticationError(data, json_body=response_data)
         elif response_code == 403:
-            raise PermissionError(data['message'], json_body=response_data)
+            raise PermissionError(data, json_body=response_data)
             
         return data
     
@@ -110,7 +112,7 @@ class HTTPTransport(object):
         # Pass data in already encoded, valid data is returned as a dict
         headers = headers if headers else {}
         headers.update(config.headers)
-        if HTTP_LIB == 'urlfetch':
+        if HTTP_LIB == 'urlfetch': 
             try:
                 if data:
                     data = json.dumps(data)
@@ -121,7 +123,7 @@ class HTTPTransport(object):
             else:
                 return cls._decode(resp.content, resp.status_code)
                 
-        elif HTTP_LIB == 'pycurl':
+        elif HTTP_LIB == 'pycurl': 
             import StringIO
             buf = StringIO.StringIO()
             try:
@@ -135,9 +137,10 @@ class HTTPTransport(object):
                 c.setopt(pycurl.POSTFIELDS, data or '')
                 url = '%s%s' % (config.base_url, url)
                 c.setopt(c.URL, url)
+                
                 if headers:
                     c.setopt(c.HTTPHEADER, ['%s: %s' % (k,v) for k,v in headers.iteritems()])
-                c.setopt(c.FAILONERROR, True)
+                c.setopt(c.FAILONERROR, False)
                 c.perform()
                 status_code = c.getinfo(pycurl.HTTP_CODE)
                 c.close()
@@ -145,7 +148,7 @@ class HTTPTransport(object):
                 errno, errstr = error
             else:
                 return cls._decode(buf.getvalue(), status_code)
-        elif HTTP_LIB == 'urllib2':
+        elif HTTP_LIB == 'urllib2': 
             try:
                 opener = urllib2.build_opener(urllib2.HTTPHandler)
                 if data:
@@ -154,9 +157,9 @@ class HTTPTransport(object):
                 request = urllib2.Request('%s%s' % (config.base_url, url), data=data, headers=headers)
                 request.get_method = lambda: 'POST'
                 resp = opener.open(request, timeout=10)
-                return cls._decode(resp.read(), resp.code)
+                return cls._decode(resp.read(), resp.getcode())
             except urllib2.HTTPError, e:
-                pass
+                return cls._decode(e.read(), e.getcode())
             
     @classmethod  
     def get(cls, url, data=None, headers=None):
@@ -190,7 +193,7 @@ class HTTPTransport(object):
                 c.setopt(c.URL, url)
                 if headers:
                     c.setopt(c.HTTPHEADER, ['%s: %s' % (k,v) for k,v in headers.iteritems()])
-                c.setopt(c.FAILONERROR, True)
+                c.setopt(c.FAILONERROR, False)
                 c.perform()
                 status_code = c.getinfo(pycurl.HTTP_CODE)
                 c.close()
@@ -209,9 +212,9 @@ class HTTPTransport(object):
                 request = urllib2.Request(url, headers=headers)
                 request.get_method = lambda: 'GET'
                 resp = opener.open(request, timeout=10)
-                return cls._decode(resp.read(), resp.code)
+                return cls._decode(resp.read(), resp.getcode())
             except urllib2.HTTPError, e:
-                pass
+                return cls._decode(e.read(), e.getcode())
 
     @classmethod  
     def put(cls, url, data=None, headers=None):
@@ -250,7 +253,7 @@ class HTTPTransport(object):
                 c.setopt(c.URL, url)
                 if headers:
                     c.setopt(c.HTTPHEADER, ['%s: %s' % (k,v) for k,v in headers.iteritems()])
-                c.setopt(c.FAILONERROR, True)
+                c.setopt(c.FAILONERROR, False)
                 c.perform()
                 status_code = c.getinfo(pycurl.HTTP_CODE)
                 c.close()
@@ -267,9 +270,9 @@ class HTTPTransport(object):
                 request = urllib2.Request('%s%s' % (config.base_url, url), data=data, headers=headers)
                 request.get_method = lambda: 'PUT'
                 resp = opener.open(request, timeout=10)
-                return cls._decode(resp.read(), resp.code)
+                return cls._decode(resp.read(), resp.getcode())
             except urllib2.HTTPError, e:
-                pass
+                return cls._decode(e.read(), e.getcode())
 
     @classmethod
     def delete(cls, url, data=None, headers=None):
@@ -305,7 +308,7 @@ class HTTPTransport(object):
                 c.setopt(c.URL, url)
                 if headers:
                     c.setopt(c.HTTPHEADER, ['%s: %s' % (k,v) for k,v in headers.iteritems()])
-                c.setopt(c.FAILONERROR, True)
+                c.setopt(c.FAILONERROR, False)
                 c.perform()
                 status_code = c.getinfo(pycurl.HTTP_CODE)
                 c.close()
@@ -322,6 +325,6 @@ class HTTPTransport(object):
                 request = urllib2.Request('%s%s' % (config.base_url, url), data=data, headers=headers)
                 request.get_method = lambda: 'DELETE'
                 resp = opener.open(request, timeout=10)
-                return cls._decode(resp.read(), resp.code)
+                return cls._decode(resp.read(), resp.getcode())
             except urllib2.HTTPError, e:
-                pass
+                return cls._decode(e.read(), e.getcode())
