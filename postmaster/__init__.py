@@ -72,14 +72,14 @@ class Tracking(PostmasterObject):
     pass
 
 class Rate(PostmasterObject):
-    PATH = '/api/v1/rates'
+    PATH = '/v1/rates'
 
 class TimeInTransit(PostmasterObject):
-    PATH = '/api/v1/times'
+    PATH = '/v1/times'
 
-class AddressValidation(PostmasterObject):
+class Address(PostmasterObject):
 
-    PATH = '/api/v1/validate'
+    PATH = '/v1/validate'
 
     def __init__(self, company=None, contact=None, address=[], city=None, state=None, zip_code=None, country=None):
         kwargs = dict(
@@ -103,7 +103,7 @@ class AddressValidation(PostmasterObject):
 
 class Shipment(PostmasterObject):
     
-    PATH = '/api/v1/shipments'
+    PATH = '/v1/shipments'
     
     @classmethod
     def create(cls, to, package, from_=None, carrier=None, service=None, reference=None):
@@ -167,7 +167,7 @@ def track_by_reference(tracking_number):
     the resulting data will not contain detailed information
     about the shipment.
     """
-    return HTTPTransport.get('/api/v1/track', dict(tracking=tracking_number))
+    return HTTPTransport.get('/v1/track', dict(tracking=tracking_number))
 
 def validate_address(address_object):
     """
@@ -201,5 +201,5 @@ def get_rate(carrier, to_zip, weight, from_zip=None, service='ground'):
     return rate.put()
 
 def get_token():
-    return HTTPTransport.get('/api/v1/token')
+    return HTTPTransport.get('/v1/token')
     

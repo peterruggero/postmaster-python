@@ -32,7 +32,7 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
         assert 'history' in resp
 
     def testValidate(self):
-        address = postmaster.AddressValidation(
+        address = postmaster.Address(
 			company='ASLS',
 			contact='Joe Smith',
 			address=['1110 Algarita Ave.'],

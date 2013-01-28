@@ -1,4 +1,4 @@
-import urllib
+import urllib, os
 try:
     import json
 except ImportError:
@@ -24,6 +24,8 @@ HTTP_LIB = None
 # for the current system.
 try:
     from google.appengine.api import urlfetch
+    if not 'CURRENT_VERSION_ID' in os.environ:
+        raise ImportError
     HTTP_LIB = 'urlfetch'
 except ImportError:
     try:
