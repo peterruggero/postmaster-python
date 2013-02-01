@@ -57,6 +57,15 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
                 'zip_code':'78704',
                 'phone_no':'919-720-7941'
             },
+            from_={
+                'company':'ASLS',
+                'contact':'Joe Smith',
+                'line1':'1110 Algarita Ave.',
+                'city':'Austin',
+                'state':'TX',
+                'zip_code':'78704',
+                'phone_no':'919-720-7941'
+            },
             package={
                 'weight':1.5,
                 'length':10,
@@ -72,6 +81,15 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
     def testShipmentTrack(self):
         shipment = postmaster.Shipment.create(
             to={
+                'company':'ASLS',
+                'contact':'Joe Smith',
+                'line1':'1110 Algarita Ave.',
+                'city':'Austin',
+                'state':'TX',
+                'zip_code':'78704',
+                'phone_no':'919-720-7941'
+            },
+            from_={
                 'company':'ASLS',
                 'contact':'Joe Smith',
                 'line1':'1110 Algarita Ave.',
