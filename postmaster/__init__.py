@@ -81,20 +81,20 @@ class Address(PostmasterObject):
 
     PATH = '/v1/validate'
 
-    def __init__(self, company=None, contact=None, address=[], city=None, state=None, zip_code=None, country=None):
+    def __init__(self, company=None, contact=None, line1=None, line2=None, line3=None, city=None, state=None, zip_code=None, country=None):
         kwargs = dict(
             company=company,
             contact=contact,
-            line1=isinstance(address, list) and address[0] or address,
+			line1=line1,
             city=city,
             state=state,
             zip_code=zip_code,
             country=country
         )
-        if isinstance(address, list) and len(address) > 1:
-            kwargs['line2'] = address[1]
-        if isinstance(address, list) and len(address) > 2:
-            kwargs['line3'] = address[2]
+        if line2:
+            kwargs['line2'] = line2
+        if line3:
+            kwargs['line3'] = line3
         super(Address, self).__init__(**kwargs)
 
     def validate(self):
