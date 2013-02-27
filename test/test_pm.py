@@ -38,7 +38,7 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
         address = postmaster.Address(
             company='ASLS',
             contact='Joe Smith',
-            address=['1110 Algarita Ave.'],
+            line1='1110 Algarita Ave.',
             city='Austin',
             state='TX',
             zip_code='78704',
