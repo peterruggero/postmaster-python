@@ -11,7 +11,7 @@ should run:
 See http://www.pip-installer.org/en/latest/index.html for instructions
 on installing pip. If you are on a system with easy_install but not
 pip, you can use easy_install instead. If you're not using virtualenv,
-you may have to prefix those commands with +sudo+. You can learn more
+you may have to prefix those commands with `sudo`. You can learn more
 about virtualenv at http://www.virtualenv.org/
 
 To install from source, run:

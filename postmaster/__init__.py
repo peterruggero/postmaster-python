@@ -67,15 +67,19 @@ class PostmasterObject(object):
             response = HTTPTransport.get(
                 self.PATH, params, headers=config.headers)
         return response
-    
+
+
 class Tracking(PostmasterObject):
     pass
+
 
 class Rate(PostmasterObject):
     PATH = '/v1/rates'
 
+
 class TimeInTransit(PostmasterObject):
     PATH = '/v1/times'
+
 
 class Address(PostmasterObject):
 
@@ -85,7 +89,7 @@ class Address(PostmasterObject):
         kwargs = dict(
             company=company,
             contact=contact,
-			line1=line1,
+            line1=line1,
             city=city,
             state=state,
             zip_code=zip_code,
@@ -102,43 +106,51 @@ class Address(PostmasterObject):
 
 
 class Shipment(PostmasterObject):
-    
+
     PATH = '/v1/shipments'
-    
+
     @classmethod
-    def create(cls, to, package, from_=None, carrier=None, service=None, reference=None):
+    def create(cls, to, packages, service, from_=None, carrier=None, reference=None):
         """
-        Create a new shipment.  
-        
+        Create a new shipment.
+
         Arguments:
-        
-         * to (required) - a dict representing the ship-to address: 
+
+         * to (required) - a dict representing the ship-to address:
            * company
            * contact
            * street - a list of strings defining the street address
            * city
            * state
            * zip
-         * package (required) - a dict (or list of dicts) representing the package:
-           * value
+         * packages (required) - a dict (or list of dicts) representing the package:
            * weight
-           * dimentions
-         * from (optional) - a dict representing the ship-from address.  Will use default
-           for account if not provided.
+           * length
+           * width
+           * height
+         * from (optional) - a dict representing the ship-from address.
+                             Will use default for account if not provided.
+         * customs (optional)
         """
+
         shipment = Shipment()
         shipment._data = {
-            'to':to,
-            'from':from_,
-            'package':package,
-            'carrier':carrier,
-            'service':service,
-            'reference':reference
+            'to': to,
+            'packages': packages,
+            'service': service,
         }
+        if from_:
+            shipment._data['from'] = from_
+        if carrier:
+            shipment._data['carrier'] = carrier
+        if reference:
+            shipment._data['reference'] = reference
+
         resp = shipment.put()
+
         shipment.id = resp['id']
         return shipment
-       
+
     @classmethod
     def retrieve(cls, package_id):
         """
@@ -147,18 +159,19 @@ class Shipment(PostmasterObject):
         shipment = Shipment()
         shipment._data = shipment.get(package_id)
         return shipment
-       
+
     def track(self):
         """
         Track a shipment (from an object)
         """
         return Tracking(**self.get(self.id, 'track'))
-        
+
     def void(self):
         """
         Void a shipment (from an object)
         """
         self.put(self.id, 'void')
+
 
 def track_by_reference(tracking_number):
     """
@@ -169,11 +182,13 @@ def track_by_reference(tracking_number):
     """
     return HTTPTransport.get('/v1/track', dict(tracking=tracking_number))
 
+
 def validate_address(address_object):
     """
     Validate that an address is correct.
     """
     pass
+
 
 def get_transit_time(from_zip, to_zip, weight, carrier=None):
     """
@@ -187,6 +202,7 @@ def get_transit_time(from_zip, to_zip, weight, carrier=None):
     )
     return tit.put()
 
+
 def get_rate(carrier, to_zip, weight, from_zip=None, service='ground'):
     """
     Find the cost to ship a package from point A to point B.
@@ -198,8 +214,9 @@ def get_rate(carrier, to_zip, weight, from_zip=None, service='ground'):
         carrier=carrier,
         service=service,
     )
+
     return rate.put()
+
 
 def get_token():
     return HTTPTransport.get('/v1/token')
-    
