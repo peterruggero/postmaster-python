@@ -148,7 +148,9 @@ class Shipment(PostmasterObject):
 
         resp = shipment.put()
 
+        shipment._data.update(resp)
         shipment.id = resp['id']
+
         return shipment
 
     @classmethod
