@@ -19,7 +19,7 @@ class Config(threading.local, object):
     @property
     def headers(self):
         if self.api_key:
-            self._headers['Authorization'] = 'Basic %s' % ('%s:' % self.api_key).encode('base64').replace('\n','')
+            self._headers['Authorization'] = 'Basic %s' % ('%s:' % self.api_key).encode('base64').replace('\n', '')
         return self._headers
 
 
