@@ -270,13 +270,14 @@ class Package(PostmasterObject):
                    sunits=', '.join(cls.size_units))
 
         fit = Package()
+        fit.PATH += '/fit'
         fit._data = {'items': items}
         if packages:
             fit._data['packages'] = packages
         if package_limit:
             fit._data['package_limit'] = package_limit
 
-        resp = fit.put(action='fit')
+        resp = fit.put()
 
         fit._data.update(resp)
 
