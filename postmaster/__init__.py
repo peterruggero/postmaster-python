@@ -214,7 +214,7 @@ class Package(PostmasterObject):
         if size_units in cls.size_units:
             box._data['size_units'] = size_units
         if name:
-            box._dat['name'] = name
+            box._data['name'] = name
 
         resp = box.put()
 
