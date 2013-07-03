@@ -195,11 +195,10 @@ class Package(PostmasterObject):
         * height (required) - The height of the box.
         * length (required) - The length of the box.
         * weight The weight of the box.
-        * weight_units - The units used to measure weight. {wunits}
-        * size_units - The units used to measure sizes. {sunits}
+        * weight_units - The units used to measure weight. LB, OZ, KG, or G
+        * size_units - The units used to measure sizes. IN, FT, CM, or M
         * name - A memorable name.
-        """.format(wunits=', '.join(cls.weight_units),
-                   sunits=', '.join(cls.size_units))
+        """
 
         box = Package()
         box._data = {
@@ -254,8 +253,8 @@ class Package(PostmasterObject):
           * height (required)
           * length (required)
           * weight
-          * weight_units - Choices: {wunits}
-          * size_units - Choices: {sunits}
+          * weight_units - Choices: LB, OZ, KG, or G.
+          * size_units - Choices: IN, FT, CM, or M.
           * name
           * sku
         * packages (optional) - A list of package types to use. (Default is use API boxes).
@@ -263,11 +262,10 @@ class Package(PostmasterObject):
           * height (required)
           * length (required)
           * weight
-          * weight_units - Choices: {wunits}
-          * size_units - Choices: {sunits}
+          * weight_units - Choices: LB, OZ, KG, or G.
+          * size_units - Choices: IN, FT, CM, or M.
         * package_limit (optional) - A maximum number of packages to create.
-        """.format(wunits=', '.join(cls.weight_units),
-                   sunits=', '.join(cls.size_units))
+        """
 
         fit = Package()
         fit.PATH += '/fit'
