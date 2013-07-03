@@ -170,6 +170,14 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
         )
         assert resp is not None
 
+    def testPackageCreate(self):
+        box = Package.create(width=5, height=5, length=5, weight=10)
+        assert box._data['weight_units'] == 'LB'
+        assert box._data['size_units'] == 'IN'
+
+        boxes = Package.list()
+        assert len(boxes._data['results']) == 1
+
 
 class PostmasterTestCase_Urlfetch(PostmasterTestCase_Urllib2):
     def setUp(self):

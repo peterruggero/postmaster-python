@@ -179,6 +179,110 @@ class Shipment(PostmasterObject):
         self.put(self.id, 'void')
 
 
+class Package(PostmasterObject):
+    PATH = '/v1/packages'
+    weight_units = ['LB', 'OZ', 'KG', 'G']
+    size_units = ['IN', 'FT', 'CM', 'M']
+
+    @classmethod
+    def create(cls, width, height, length, weight=None, weight_units='LB', size_units='IN', name=None):
+        """
+        Create a new box.
+
+        Arguments:
+
+        * width (required) - The width of the box.
+        * height (required) - The height of the box.
+        * length (required) - The length of the box.
+        * weight The weight of the box.
+        * weight_units - The units used to measure weight. {wunits}
+        * size_units - The units used to measure sizes. {sunits}
+        * name - A memorable name.
+        """.format(wunits=', '.join(cls.weight_units),
+                   sunits=', '.join(cls.size_units))
+
+        box = Package()
+        box._data = {
+            'width': width,
+            'height': height,
+            'length': length,
+        }
+
+        if weight:
+            box._data['weight'] = weight
+        if weight_units in cls.weight_units:
+            box._data['weight_units'] = weight_units
+        if size_units in cls.size_units:
+            box._data['size_units'] = size_units
+        if name:
+            box._dat['name'] = name
+
+        resp = box.put()
+
+        box._data.update(resp)
+        box.id = resp['id']
+
+        return box
+
+    @classmethod
+    def list(cls, limit=10, cursor=None):
+        """
+        Retrieve a list of all user-defined box types.
+
+        Arguments:
+
+        * limit (optional) - Number of boxes to get. Default 10.
+        * cursor (optional) - Cursor offset.
+        """
+
+        boxes = Package()
+        resp = boxes.get()
+
+        boxes._data.update(resp)
+
+        return boxes
+
+    @classmethod
+    def fit(cls, items, packages=None, package_limit=None):
+        """
+        Given a set of box types, try to fill it optimally.
+
+        Arguments:
+
+        * items (required) - A list of items (dicts) to fit into the box.
+          * width (required)
+          * height (required)
+          * length (required)
+          * weight
+          * weight_units - Choices: {wunits}
+          * size_units - Choices: {sunits}
+          * name
+          * sku
+        * packages (optional) - A list of package types to use. (Default is use API boxes).
+          * width (required)
+          * height (required)
+          * length (required)
+          * weight
+          * weight_units - Choices: {wunits}
+          * size_units - Choices: {sunits}
+        * package_limit (optional) - A maximum number of packages to create.
+        """.format(wunits=', '.join(cls.weight_units),
+                   sunits=', '.join(cls.size_units))
+
+        fit = Package()
+        fit._data = {'items': items}
+        if packages:
+            fit._data['packages'] = packages
+        if package_limit:
+            fit._data['package_limit'] = package_limit
+
+        resp = fit.put(action='fit')
+
+        fit._data.update(resp)
+
+        return fit
+
+
 def track_by_reference(tracking_number):
     """
     Track any package by it's carrier-specific tracking number.
