@@ -48,31 +48,31 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
     def testShipmentCreateRetrive(self):
         shipment1 = postmaster.Shipment.create(
             to={
-                'company':'ASLS',
-                'contact':'Joe Smith',
-                'line1':'1110 Algarita Ave.',
-                'city':'Austin',
-                'state':'TX',
-                'zip_code':'78704',
-                'phone_no':'919-720-7941'
+                'company': 'Acme Inc.',
+                'contact': 'Joe Smith',
+                'line1': '720 Brazos St.',
+                'city': 'Austin',
+                'state': 'TX',
+                'zip_code': '78701',
+                'phone_no': '919-720-7941'
             },
             from_={
-                'company':'ASLS',
-                'contact':'Joe Smith',
-                'line1':'1110 Algarita Ave.',
-                'city':'Austin',
-                'state':'TX',
-                'zip_code':'78704',
-                'phone_no':'919-720-7941'
+                'company': 'ASLS',
+                'contact': 'Joe Smith',
+                'line1': '1110 Algarita Ave.',
+                'city': 'Austin',
+                'state': 'TX',
+                'zip_code': '78704',
+                'phone_no': '919-720-7941'
             },
-            packages={
-                'weight':1.5,
-                'length':10,
-                'width':6,
-                'height':8,
-            },
-            carrier='usps',
-            service='2DAY',
+            packages=[{
+                'weight': 1.5,
+                'length': 10,
+                'width': 6,
+                'height': 8,
+            }],
+            carrier='ups',
+            service='GROUND',
         )
         shipment2 = postmaster.Shipment.retrieve(shipment1.id)
         self.assertEqual(shipment1.id, shipment2.id)
@@ -80,22 +80,29 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
     def testShipmentCreateInternational(self):
         shipment = postmaster.Shipment.create(
             to={
-                'company': 'Acme Inc.',
+                'company': 'Hotel',
+                'contact': 'Jan Nowak',
+                'line1': 'Aleja ks Biskupa Juliusza Bursche 3',
+                'city': 'Wisla',
+                'state': 'TX',
+                'zip_code': '43460',
+                'phone_no': '33 855 47 00',
+                'phone_ext': '+48',
+                'country': 'PL',
+                #'tax_id': '965-71-4343',
+                #'residential': False,
+            },
+            from_={
+                'company': 'ASLS',
                 'contact': 'Joe Smith',
-                'line1': '701 Brazos St.',
-                'line2': 'Elevator at end of hallway',
-                'line3': 'Spot with umbrella on the roof',
+                'line1': '1110 Algarita Ave. 2',
                 'city': 'Austin',
                 'state': 'TX',
-                'zip_code': '78701',
-                'phone_no': '555-123-4452',
-                'phone_ext': '555',
-                'country': 'FR',
-                'tax_id': '965-71-4343',
-                'residential': False,
+                'zip_code': '78704',
+                'phone_no': '919-720-7941'
             },
             packages=[{
-                'weight': 1.5,
+                'weight': 3.5,
                 'length': 10,
                 'width': 6,
                 'height': 8,
@@ -112,50 +119,50 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
                     }, ],
                 },
             }, ],
-            carrier='usps',
-            service='INTL_SURFACE',
+            carrier='ups',
+            service='INTL_PRIORITY',
         )
         customs = shipment._data['packages'][0]['customs']
-        assert shipment._data['to']['country'] == 'FR'
-        assert shipment._data['service'] == 'INTL_SURFACE'
+        assert shipment._data['to']['country'] == 'PL'
+        assert shipment._data['service'] == 'INTL_PRIORITY'
         assert customs['type'] == 'Gift'
         assert customs['contents'][0]['value'] == '15'
 
     def testShipmentTrack(self):
         shipment = postmaster.Shipment.create(
             to={
-                'company':'ASLS',
-                'contact':'Joe Smith',
-                'line1':'1110 Algarita Ave.',
-                'city':'Austin',
-                'state':'TX',
-                'zip_code':'78704',
-                'phone_no':'919-720-7941'
+                'company': 'Acme Inc.',
+                'contact': 'Joe Smith',
+                'line1': '720 Brazos St.',
+                'city': 'Austin',
+                'state': 'TX',
+                'zip_code': '78701',
+                'phone_no': '919-720-7941'
             },
             from_={
-                'company':'ASLS',
-                'contact':'Joe Smith',
-                'line1':'1110 Algarita Ave.',
-                'city':'Austin',
-                'state':'TX',
-                'zip_code':'78704',
-                'phone_no':'919-720-7941'
+                'company': 'ASLS',
+                'contact': 'Joe Smith',
+                'line1': '1110 Algarita Ave 2.',
+                'city': 'Austin',
+                'state': 'TX',
+                'zip_code': '78704',
+                'phone_no': '919-720-7941'
             },
             packages=[{
-                'weight':1.5,
-                'length':10,
-                'width':6,
-                'height':8,
-                }],
-            carrier='usps',
-            service='2DAY',
+                'weight': 1.5,
+                'length': 10,
+                'width': 6,
+                'height': 8,
+            }],
+            carrier='ups',
+            service='GROUND',
         )
         shipment.track()
 
     def testTimes(self):
         resp = postmaster.get_transit_time(
             '78704',
-            '28806',
+            '78701',
             '5',
             'ups'
         )
@@ -166,17 +173,17 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
             'ups',
             '78704',
             '5',
-            '28806',
+            '78701',
         )
         assert resp is not None
 
     def testPackageCreate(self):
-        box = Package.create(width=5, height=5, length=5, weight=10)
+        box = postmaster.Package.create(width=5, height=5, length=5, weight=10)
         assert box._data['weight_units'] == 'LB'
         assert box._data['size_units'] == 'IN'
+        boxes = postmaster.Package.list()
+        self.assertIn('width', boxes._data['results'][0])
 
-        boxes = Package.list()
-        assert len(boxes._data['results']) == 1
 
 
 class PostmasterTestCase_Urlfetch(PostmasterTestCase_Urllib2):

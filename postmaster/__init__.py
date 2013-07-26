@@ -46,11 +46,13 @@ class PostmasterObject(object):
         Put object to server.
         """
         if id_:
+
             response = HTTPTransport.put(
                 action and '%s/%s/%s' % (self.PATH, id_, action) or \
                     '%s/%s' % (self.PATH, id_),
                 self._data, headers=config.headers)
         else:
+
             response = HTTPTransport.post(self.PATH, self._data, headers=config.headers)
         return response
         
