@@ -244,13 +244,13 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
         packages, cursor, prev_cursor = postmaster.Package.list(cursor=cursor, limit=5)
         self.assertEqual(len(packages), 5)
 
-    def testDeletePackage(self):
+    def testRemovePackage(self):
         package = self.testPackageCreate()
-        id = package.id
-        package = postmaster.Package.retrieve(package_id=id)
+        id_ = package.id
+        package = postmaster.Package.retrieve(package_id=id_)
         self.assertIsInstance(package.id, int)
-        package.remove()
-        package = postmaster.Package.retrieve(package_id=id)
+        self.assertTrue(package.remove())
+        package = postmaster.Package.retrieve(package_id=id_)
         self.assertIsNone(package)
 
 

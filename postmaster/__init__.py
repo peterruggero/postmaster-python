@@ -263,9 +263,11 @@ class Package(PostmasterObject):
         return package
 
     def remove(self):
-        result = self.delete(self.id)
+        status = self.delete(self.id)
         if 'id' in self._data:
             del self._data['id']
+
+        return isinstance(status, dict) and status.get('message') == 'OK'
 
     @classmethod
     def list(cls, cursor=None, limit=None):
