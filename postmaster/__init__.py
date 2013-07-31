@@ -248,9 +248,24 @@ class Package(PostmasterObject):
         resp = box.put()
 
         box._data.update(resp)
-        box.id = resp['id']
 
         return box
+
+    @classmethod
+    def retrieve(cls, package_id):
+        """
+        Retrieve a package by ID.
+        """
+        package = Package()
+        package._data = package.get(package_id)
+        if 'id' not in package._data:
+            return None
+        return package
+
+    def remove(self):
+        result = self.delete(self.id)
+        if 'id' in self._data:
+            del self._data['id']
 
     @classmethod
     def list(cls, cursor=None, limit=None):
@@ -267,6 +282,7 @@ class Package(PostmasterObject):
         if limit is not None:
             data['limit'] = limit
         res = package.get(params=data)
+
         cursor = res['cursor']
         prev_cursor = res['previousCursor']
         packages = res['results']
@@ -346,7 +362,7 @@ def get_transit_time(from_zip, to_zip, weight, carrier=None):
     return tit.put()
 
 
-def get_rate(carrier, to_zip, weight, from_zip=None, service='ground'):
+def get_rate(from_zip, to_zip, weight, carrier=None, service='ground'):
     """
     Find the cost to ship a package from point A to point B.
     """

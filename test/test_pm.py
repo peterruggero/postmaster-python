@@ -163,18 +163,27 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
 
     def testRates(self):
         resp = postmaster.get_rate(
-            'ups',
             '78704',
-            '5',
             '28806',
+            '5',
+            'ups',
         )
         assert resp is not None
+
+        resp = postmaster.get_rate(
+            '78704',
+            '28806',
+            '5',
+        )
+        assert resp is not None
+        assert 'best' in resp
 
     def testPackageCreate(self):
         box = postmaster.Package.create(width=5, height=5, length=5, weight=10)
         self.assertEqual(box.weight_units, 'LB')
         self.assertEqual(box.dimension_units, 'IN')
         self.assertIsInstance(box.id, int)
+        return box
 
     def testPackageCreateFail(self):
         # fail
@@ -234,6 +243,15 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
 
         packages, cursor, prev_cursor = postmaster.Package.list(cursor=cursor, limit=5)
         self.assertEqual(len(packages), 5)
+
+    def testDeletePackage(self):
+        package = self.testPackageCreate()
+        id = package.id
+        package = postmaster.Package.retrieve(package_id=id)
+        self.assertIsInstance(package.id, int)
+        package.remove()
+        package = postmaster.Package.retrieve(package_id=id)
+        self.assertIsNone(package)
 
 
 class PostmasterTestCase_Urlfetch(PostmasterTestCase_Urllib2):
