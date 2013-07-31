@@ -23,7 +23,7 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
         super(PostmasterTestCase_Urllib2, self).setUp()
         postmaster.http.HTTP_LIB = 'urllib2'
         postmaster.config.base_url = os.environ.get('PM_API_HOST', 'http://localhost:8000')
-        postmaster.config.api_key = os.environ.get('PM_API_KEY', 'tt_NzAwMTpfOFFzNGxmQ29NaGE4VkJDSTdOdF8zaXk2UTQ')
+        postmaster.config.api_key = os.environ.get('PM_API_KEY', 'tt_MTpBdl9rdTBWSUIwN0tVN1dWT2dwV3VBYVUySjA')
 
     def testToken(self):
         token = postmaster.get_token()
@@ -65,12 +65,12 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
                 'zip_code':'78704',
                 'phone_no':'919-720-7941'
             },
-            packages={
+            packages=[{
                 'weight':1.5,
                 'length':10,
                 'width':6,
                 'height':8,
-            },
+            }],
             carrier='usps',
             service='2DAY',
         )
@@ -163,20 +163,95 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
 
     def testRates(self):
         resp = postmaster.get_rate(
-            'ups',
             '78704',
-            '5',
             '28806',
+            '5',
+            'ups',
         )
         assert resp is not None
 
-    def testPackageCreate(self):
-        box = Package.create(width=5, height=5, length=5, weight=10)
-        assert box._data['weight_units'] == 'LB'
-        assert box._data['size_units'] == 'IN'
+        resp = postmaster.get_rate(
+            '78704',
+            '28806',
+            '5',
+        )
+        assert resp is not None
+        assert 'best' in resp
 
-        boxes = Package.list()
-        assert len(boxes._data['results']) == 1
+    def testPackageCreate(self):
+        box = postmaster.Package.create(width=5, height=5, length=5, weight=10)
+        self.assertEqual(box.weight_units, 'LB')
+        self.assertEqual(box.dimension_units, 'IN')
+        self.assertIsInstance(box.id, int)
+        return box
+
+    def testPackageCreateFail(self):
+        # fail
+        with self.assertRaises(postmaster.InvalidDataError):
+            postmaster.Package().create(1, 2, '345asd')
+
+    def testShipmentVoid(self):
+        shipment = postmaster.Shipment.create(
+            to={
+                'company':'ASLS',
+                'contact':'Joe Smith',
+                'line1':'1110 Algarita Ave.',
+                'city':'Austin',
+                'state':'TX',
+                'zip_code':'78704',
+                'phone_no':'919-720-7941'
+            },
+            from_={
+                'company':'ASLS',
+                'contact':'Joe Smith',
+                'line1':'1110 Algarita Ave.',
+                'city':'Austin',
+                'state':'TX',
+                'zip_code':'78704',
+                'phone_no':'919-720-7941'
+            },
+            packages=[{
+                'weight':1.5,
+                'length':10,
+                'width':6,
+                'height':8,
+            }],
+            carrier='usps',
+            service='2DAY',
+        )
+        # succeed
+        status = shipment.void()
+        self.assertTrue(status)
+        # fail
+        status = postmaster.Shipment(id=893457898937834589).void()
+        self.assertFalse(status)
+
+    def testListShipments(self):
+        self.testShipmentCreateRetrive()
+        shipments, cursor, prev_cursor = postmaster.Shipment.list()
+        self.assertGreater(len(shipments), 0)
+        self.assertIsInstance(cursor, unicode)
+        self.assertIsInstance(prev_cursor, unicode)
+
+    def testListPackages(self):
+        for _ in range(11):
+            self.testPackageCreate()
+        packages, cursor, prev_cursor = postmaster.Package.list(limit=6)
+        self.assertEqual(len(packages), 6)
+        self.assertIsInstance(cursor, unicode)
+        self.assertIsInstance(prev_cursor, unicode)
+
+        packages, cursor, prev_cursor = postmaster.Package.list(cursor=cursor, limit=5)
+        self.assertEqual(len(packages), 5)
+
+    def testRemovePackage(self):
+        package = self.testPackageCreate()
+        id_ = package.id
+        package = postmaster.Package.retrieve(package_id=id_)
+        self.assertIsInstance(package.id, int)
+        self.assertTrue(package.remove())
+        package = postmaster.Package.retrieve(package_id=id_)
+        self.assertIsNone(package)
 
 
 class PostmasterTestCase_Urlfetch(PostmasterTestCase_Urllib2):
