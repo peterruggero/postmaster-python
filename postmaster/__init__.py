@@ -68,6 +68,16 @@ class PostmasterObject(object):
                 self.PATH, params, headers=config.headers)
         return response
 
+    def delete(self, id_=None, action=None):
+        if action:
+            url = '%s/%s/%s' % (self.PATH, id_, action)
+        else:
+            url = '%s/%s' % (self.PATH, id_)
+
+        response = HTTPTransport.delete(url, headers=config.headers)
+
+        return response
+
 
 class Tracking(PostmasterObject):
     pass
@@ -176,16 +186,35 @@ class Shipment(PostmasterObject):
         """
         Void a shipment (from an object)
         """
-        self.put(self.id, 'void')
+        status = self.delete(self.id, 'void')
+        return isinstance(status, dict) and status.get('message') == 'OK'
+
+    @classmethod
+    def list(cls, cursor=None, limit=None):
+        """
+        List of user defined shipments.
+        :param cursor: cursor or previousCursor for shipments list querying.
+        :param limit: Quantity of shipments per query.
+        :return: Tuple with shipments list, cursor and previous cursor.
+        """
+        shipment = Shipment()
+        data = {}
+        if cursor is not None:
+            data['cursor'] = cursor
+        if limit is not None:
+            data['limit'] = limit
+
+        res = shipment.get(params=data)
+        return res.get('results'), res['cursor'], res['previousCursor']
 
 
 class Package(PostmasterObject):
     PATH = '/v1/packages'
-    weight_units = ['LB', 'OZ', 'KG', 'G']
-    size_units = ['IN', 'FT', 'CM', 'M']
+    WEIGHT_UNITS = ['LB', 'OZ', 'KG', 'G']
+    DIMENSION_UNITS = ['IN', 'FT', 'CM', 'M']
 
     @classmethod
-    def create(cls, width, height, length, weight=None, weight_units='LB', size_units='IN', name=None):
+    def create(cls, width, height, length, weight=None, weight_units='LB', dimension_units='IN', name=None):
         """
         Create a new box.
 
@@ -209,10 +238,10 @@ class Package(PostmasterObject):
 
         if weight:
             box._data['weight'] = weight
-        if weight_units in cls.weight_units:
+        if weight_units in cls.WEIGHT_UNITS:
             box._data['weight_units'] = weight_units
-        if size_units in cls.size_units:
-            box._data['size_units'] = size_units
+        if dimension_units in cls.DIMENSION_UNITS:
+            box._data['dimension_units'] = dimension_units
         if name:
             box._data['name'] = name
 
@@ -224,22 +253,27 @@ class Package(PostmasterObject):
         return box
 
     @classmethod
-    def list(cls, limit=10, cursor=None):
+    def list(cls, cursor=None, limit=None):
         """
-        Retrieve a list of all user-defined box types.
+        List all user-defined box types.
+        :param cursor: The cursor offset (optional).
+        :param limit: The number of boxes to get (optional, default: 10).
+        :return: Tuple with packages list, cursor and previous cursor.
+         """
+        package = Package()
+        data = {}
+        if cursor is not None:
+            data['cursor'] = cursor
+        if limit is not None:
+            data['limit'] = limit
+        res = package.get(params=data)
+        cursor = res['cursor']
+        prev_cursor = res['previousCursor']
+        packages = res['results']
 
-        Arguments:
+        packages = [Package(**package) for package in packages]
 
-        * limit (optional) - Number of boxes to get. Default 10.
-        * cursor (optional) - Cursor offset.
-        """
-
-        boxes = Package()
-        resp = boxes.get()
-
-        boxes._data.update(resp)
-
-        return boxes
+        return packages, cursor, prev_cursor
 
     @classmethod
     def fit(cls, items, packages=None, package_limit=None):
