@@ -75,7 +75,9 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
             service='2DAY',
         )
         shipment2 = postmaster.Shipment.retrieve(shipment1.id)
+
         self.assertEqual(shipment1.id, shipment2.id)
+        self.assertDictEqual(shipment1._data, shipment2._data)
 
     def testShipmentCreateInternational(self):
         shipment = postmaster.Shipment.create(
