@@ -381,3 +381,6 @@ def get_rate(from_zip, to_zip, weight, carrier=None, service='ground'):
 
 def get_token():
     return HTTPTransport.get('/v1/token')
+
+def monitor_reference():
+    pass

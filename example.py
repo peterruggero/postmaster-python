@@ -1,7 +1,7 @@
 import postmaster
 
 
-postmaster.config.api_key = 'tt_NzAwMTpfOFFzNGxmQ29NaGE4VkJDSTdOdF8zaXk2UT'
+postmaster.config.api_key = '0b9a54438fba2dc0d39be8f7c6c71a58'
 
 
 def create_shipment_simplest():
@@ -153,7 +153,117 @@ def create_shipment_full():
     )
     return shipment
 
+
+def ship():
+    shipment = postmaster.Shipment.create(
+        to={
+            'company': 'Acme Inc.',
+            'contact': 'Joe Smith',
+            'line1': '701 Brazos St.',
+            'city': 'Austin',
+            'state': 'TX',
+            'zip_code': '78701',
+            'phone_no': '555-123-4452'
+        },
+        packages=[{
+            'weight': 1.5,
+            'length': 10,
+            'width': 6,
+            'height': 8,
+        }],
+        carrier='ups',
+        service='2DAY',
+    )
+    return shipment
+
+
+def address():
+    address = postmaster.Address(
+        company='ACME',
+        contact='Joe Smith',
+        line1='100 Congress Ave.',
+        city='Austin',
+        state='TX',
+        zip_code='78701',
+    )
+    response = address.validate()
+    return response
+
+
+def time():
+    response = postmaster.get_transit_time(
+        from_zip='28771',
+        to_zip='78704',
+        weight='1.0',
+        carrier='ups'
+    )
+    return response
+
+
+def rate():
+    response = postmaster.get_rate(
+        from_zip='28771',
+        to_zip='78704',
+        weight='1.0',
+        carrier='ups',
+    )
+    return response
+
+
+def box():
+    box = postmaster.Package.create(
+        width=10,
+        height=12,
+        length=8,
+        name='My Fun Box'
+    )
+    return box
+
+
+def fit():
+    response = postmaster.Package.fit(
+        items=[{
+            'width': 2.2,
+            'length': 3,
+            'height': 1,
+            'count': 2,
+        }],
+        packages=[{
+            'width': 6,
+            'length': 6,
+            'height': 6,
+            'sku': '123ABC',
+        }, {
+            'width': 12,
+            'length': 12,
+            'height': 12,
+            'sku': '456XYZ',
+        }]
+    )
+    return response
+
+
+def list_shipments():
+    shipments, cursor, prev_cursor = postmaster.Shipment.list(limit=1)
+    return shipments, cursor, prev_cursor
+
+
+def delete():
+    response = postmaster.Shipment().delete(1234)
+    return response
+
+
 if __name__ == '__main__':
+
     print create_shipment_simplest()
-    print create_shipment_international()
-    print create_shipment_full()
+    #print create_shipment_international()
+    #print create_shipment_full()
+    #ship()
+    #address()
+    #time()
+    #rate()
+    #box()
+    #fit()
+    #list_shipments()
+    #delete()
+    pass
