@@ -23,7 +23,7 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
         super(PostmasterTestCase_Urllib2, self).setUp()
         postmaster.http.HTTP_LIB = 'urllib2'
         postmaster.config.base_url = os.environ.get('PM_API_HOST', 'http://localhost:8000')
-        postmaster.config.api_key = os.environ.get('PM_API_KEY', 'tt_MTpBdl9rdTBWSUIwN0tVN1dWT2dwV3VBYVUySjA')
+        postmaster.config.api_key = os.environ.get('PM_API_KEY', 'tt_MTAwMTptNW5STDZQWVY5ZGxoVlBEdDZ4N1BzNDFIUmc')
 
     def testToken(self):
         token = postmaster.get_token()
@@ -48,31 +48,31 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
     def testShipmentCreateRetrive(self):
         shipment1 = postmaster.Shipment.create(
             to={
-                'company':'ASLS',
-                'contact':'Joe Smith',
-                'line1':'1110 Algarita Ave.',
-                'city':'Austin',
-                'state':'TX',
-                'zip_code':'78704',
-                'phone_no':'919-720-7941'
+                'company': 'Acme Inc.',
+                'contact': 'Joe Smith',
+                'line1': '720 Brazos St.',
+                'city': 'Austin',
+                'state': 'TX',
+                'zip_code': '78701',
+                'phone_no': '919-720-7941'
             },
             from_={
-                'company':'ASLS',
-                'contact':'Joe Smith',
-                'line1':'1110 Algarita Ave.',
-                'city':'Austin',
-                'state':'TX',
-                'zip_code':'78704',
-                'phone_no':'919-720-7941'
+                'company': 'ASLS',
+                'contact': 'Joe Smith',
+                'line1': '1110 Algarita Ave.',
+                'city': 'Austin',
+                'state': 'TX',
+                'zip_code': '78704',
+                'phone_no': '919-720-7941'
             },
             packages=[{
-                'weight':1.5,
-                'length':10,
-                'width':6,
-                'height':8,
+                'weight': 1.5,
+                'length': 10,
+                'width': 6,
+                'height': 8,
             }],
-            carrier='usps',
-            service='2DAY',
+            carrier='ups',
+            service='GROUND',
         )
         shipment2 = postmaster.Shipment.retrieve(shipment1.id)
 
@@ -82,22 +82,29 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
     def testShipmentCreateInternational(self):
         shipment = postmaster.Shipment.create(
             to={
-                'company': 'Acme Inc.',
+                'company': 'Hotel',
+                'contact': 'Jan Nowak',
+                'line1': 'Aleja ks Biskupa Juliusza Bursche 3',
+                'city': 'Wisla',
+                'state': 'TX',
+                'zip_code': '43460',
+                'phone_no': '33 855 47 00',
+                'phone_ext': '+48',
+                'country': 'PL',
+                #'tax_id': '965-71-4343',
+                #'residential': False,
+            },
+            from_={
+                'company': 'ASLS',
                 'contact': 'Joe Smith',
-                'line1': '701 Brazos St.',
-                'line2': 'Elevator at end of hallway',
-                'line3': 'Spot with umbrella on the roof',
+                'line1': '1110 Algarita Ave. 2',
                 'city': 'Austin',
                 'state': 'TX',
-                'zip_code': '78701',
-                'phone_no': '555-123-4452',
-                'phone_ext': '555',
-                'country': 'FR',
-                'tax_id': '965-71-4343',
-                'residential': False,
+                'zip_code': '78704',
+                'phone_no': '919-720-7941'
             },
             packages=[{
-                'weight': 1.5,
+                'weight': 3.5,
                 'length': 10,
                 'width': 6,
                 'height': 8,
@@ -115,49 +122,49 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
                 },
             }, ],
             carrier='usps',
-            service='INTL_SURFACE',
+            service='INTL_PRIORITY',
         )
         customs = shipment._data['packages'][0]['customs']
-        assert shipment._data['to']['country'] == 'FR'
-        assert shipment._data['service'] == 'INTL_SURFACE'
+        assert shipment._data['to']['country'] == 'PL'
+        assert shipment._data['service'] == 'INTL_PRIORITY'
         assert customs['type'] == 'Gift'
         assert customs['contents'][0]['value'] == '15'
 
     def testShipmentTrack(self):
         shipment = postmaster.Shipment.create(
             to={
-                'company':'ASLS',
-                'contact':'Joe Smith',
-                'line1':'1110 Algarita Ave.',
-                'city':'Austin',
-                'state':'TX',
-                'zip_code':'78704',
-                'phone_no':'919-720-7941'
+                'company': 'Acme Inc.',
+                'contact': 'Joe Smith',
+                'line1': '720 Brazos St.',
+                'city': 'Austin',
+                'state': 'TX',
+                'zip_code': '78701',
+                'phone_no': '919-720-7941'
             },
             from_={
-                'company':'ASLS',
-                'contact':'Joe Smith',
-                'line1':'1110 Algarita Ave.',
-                'city':'Austin',
-                'state':'TX',
-                'zip_code':'78704',
-                'phone_no':'919-720-7941'
+                'company': 'ASLS',
+                'contact': 'Joe Smith',
+                'line1': '1110 Algarita Ave 2.',
+                'city': 'Austin',
+                'state': 'TX',
+                'zip_code': '78704',
+                'phone_no': '919-720-7941'
             },
             packages=[{
-                'weight':1.5,
-                'length':10,
-                'width':6,
-                'height':8,
-                }],
-            carrier='usps',
-            service='2DAY',
+                'weight': 1.5,
+                'length': 10,
+                'width': 6,
+                'height': 8,
+            }],
+            carrier='ups',
+            service='GROUND',
         )
         shipment.track()
 
     def testTimes(self):
         resp = postmaster.get_transit_time(
             '78704',
-            '28806',
+            '78701',
             '5',
             'ups'
         )
@@ -180,6 +187,7 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
         assert resp is not None
         assert 'best' in resp
 
+
     def testPackageCreate(self):
         box = postmaster.Package.create(width=5, height=5, length=5, weight=10)
         self.assertEqual(box.weight_units, 'LB')
@@ -187,36 +195,38 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
         self.assertIsInstance(box.id, int)
         return box
 
+
     def testPackageCreateFail(self):
         # fail
         with self.assertRaises(postmaster.InvalidDataError):
             postmaster.Package().create(1, 2, '345asd')
 
+
     def testShipmentVoid(self):
         shipment = postmaster.Shipment.create(
             to={
-                'company':'ASLS',
-                'contact':'Joe Smith',
-                'line1':'1110 Algarita Ave.',
-                'city':'Austin',
-                'state':'TX',
-                'zip_code':'78704',
-                'phone_no':'919-720-7941'
+                'company': 'ASLS',
+                'contact': 'Joe Smith',
+                'line1': '1110 Algarita Ave.',
+                'city': 'Austin',
+                'state': 'TX',
+                'zip_code': '78704',
+                'phone_no': '919-720-7941'
             },
             from_={
-                'company':'ASLS',
-                'contact':'Joe Smith',
-                'line1':'1110 Algarita Ave.',
-                'city':'Austin',
-                'state':'TX',
-                'zip_code':'78704',
-                'phone_no':'919-720-7941'
+                'company': 'ASLS',
+                'contact': 'Joe Smith',
+                'line1': '1110 Algarita Ave.',
+                'city': 'Austin',
+                'state': 'TX',
+                'zip_code': '78704',
+                'phone_no': '919-720-7941'
             },
             packages=[{
-                'weight':1.5,
-                'length':10,
-                'width':6,
-                'height':8,
+                'weight': 1.5,
+                'length': 10,
+                'width': 6,
+                'height': 8,
             }],
             carrier='usps',
             service='2DAY',
@@ -255,6 +265,13 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
         package = postmaster.Package.retrieve(package_id=id_)
         self.assertIsNone(package)
 
+    def testMonitorExternalPackage(self):
+        response = postmaster.Track(
+            tracking_no='1Z1896X70305267337',
+            url='http://http-listener.appspot.com/'
+        ).monitor_external()
+        self.assertEqual(response, {u'status': u'OK'})
+
 
 class PostmasterTestCase_Urlfetch(PostmasterTestCase_Urllib2):
     def setUp(self):
@@ -272,6 +289,5 @@ class PostmasterTestCase_Pycurl(PostmasterTestCase_Urllib2):
         super(PostmasterTestCase_Pycurl, self).setUp()
 
 
-
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(verbosity=2)

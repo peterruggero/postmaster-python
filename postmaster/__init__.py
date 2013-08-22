@@ -46,11 +46,13 @@ class PostmasterObject(object):
         Put object to server.
         """
         if id_:
+
             response = HTTPTransport.put(
                 action and '%s/%s/%s' % (self.PATH, id_, action) or \
                     '%s/%s' % (self.PATH, id_),
                 self._data, headers=config.headers)
         else:
+
             response = HTTPTransport.post(self.PATH, self._data, headers=config.headers)
         return response
         
@@ -381,3 +383,30 @@ def get_rate(from_zip, to_zip, weight, carrier=None, service='ground'):
 
 def get_token():
     return HTTPTransport.get('/v1/token')
+
+
+class Track(PostmasterObject):
+
+    PATH = '/v1/track'
+
+    def __init__(self, tracking_no, sms=None, url=None, events=[]):
+        """
+        * tracking_no - Carrier waybill (tracking number)
+        * sms - URL to receive callback with JSON payload  (or url)
+        * url - Phone number to receive notification sms (or sms)
+        * events (optional) - List of events wants to be notified. Options are:
+            In-Transit, Out For Delivery, Delivered, Voided, Exception, Returned
+        """
+        kwargs = dict(
+            tracking_no=tracking_no,
+            events=events,
+        )
+        if url:
+            kwargs['url'] = url
+        else:
+            kwargs['sms'] = sms
+
+        super(Track, self).__init__(**kwargs)
+
+    def monitor_external(self):
+        return self.put()
