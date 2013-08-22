@@ -23,7 +23,7 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
         super(PostmasterTestCase_Urllib2, self).setUp()
         postmaster.http.HTTP_LIB = 'urllib2'
         postmaster.config.base_url = os.environ.get('PM_API_HOST', 'http://localhost:8000')
-        postmaster.config.api_key = os.environ.get('PM_API_KEY', 'tt_MTpBdl9rdTBWSUIwN0tVN1dWT2dwV3VBYVUySjA')
+        postmaster.config.api_key = os.environ.get('PM_API_KEY', '0b9a54438fba2dc0d39be8f7c6c71a58')
 
     def testToken(self):
         token = postmaster.get_token()
@@ -48,28 +48,28 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
     def testShipmentCreateRetrive(self):
         shipment1 = postmaster.Shipment.create(
             to={
-                'company':'ASLS',
-                'contact':'Joe Smith',
-                'line1':'1110 Algarita Ave.',
-                'city':'Austin',
-                'state':'TX',
-                'zip_code':'78704',
-                'phone_no':'919-720-7941'
+                'company': 'ASLS',
+                'contact': 'Joe Smith',
+                'line1': '1110 Algarita Ave.',
+                'city': 'Austin',
+                'state': 'TX',
+                'zip_code': '78704',
+                'phone_no': '919-720-7941'
             },
             from_={
-                'company':'ASLS',
-                'contact':'Joe Smith',
-                'line1':'1110 Algarita Ave.',
-                'city':'Austin',
-                'state':'TX',
-                'zip_code':'78704',
-                'phone_no':'919-720-7941'
+                'company': 'ASLS',
+                'contact': 'Joe Smith',
+                'line1': '1110 Algarita Ave.',
+                'city': 'Austin',
+                'state': 'TX',
+                'zip_code': '78704',
+                'phone_no': '919-720-7941'
             },
             packages=[{
-                'weight':1.5,
-                'length':10,
-                'width':6,
-                'height':8,
+                'weight': 1.5,
+                'length': 10,
+                'width': 6,
+                'height': 8,
             }],
             carrier='usps',
             service='2DAY',
@@ -126,29 +126,29 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
     def testShipmentTrack(self):
         shipment = postmaster.Shipment.create(
             to={
-                'company':'ASLS',
-                'contact':'Joe Smith',
-                'line1':'1110 Algarita Ave.',
-                'city':'Austin',
-                'state':'TX',
-                'zip_code':'78704',
-                'phone_no':'919-720-7941'
+                'company': 'ASLS',
+                'contact': 'Joe Smith',
+                'line1': '1110 Algarita Ave.',
+                'city': 'Austin',
+                'state': 'TX',
+                'zip_code': '78704',
+                'phone_no': '919-720-7941'
             },
             from_={
-                'company':'ASLS',
-                'contact':'Joe Smith',
-                'line1':'1110 Algarita Ave.',
-                'city':'Austin',
-                'state':'TX',
-                'zip_code':'78704',
-                'phone_no':'919-720-7941'
+                'company': 'ASLS',
+                'contact': 'Joe Smith',
+                'line1': '1110 Algarita Ave.',
+                'city': 'Austin',
+                'state': 'TX',
+                'zip_code': '78704',
+                'phone_no': '919-720-7941'
             },
             packages=[{
-                'weight':1.5,
-                'length':10,
-                'width':6,
-                'height':8,
-                }],
+                'weight': 1.5,
+                'length': 10,
+                'width': 6,
+                'height': 8,
+            }],
             carrier='usps',
             service='2DAY',
         )
@@ -195,28 +195,28 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
     def testShipmentVoid(self):
         shipment = postmaster.Shipment.create(
             to={
-                'company':'ASLS',
-                'contact':'Joe Smith',
-                'line1':'1110 Algarita Ave.',
-                'city':'Austin',
-                'state':'TX',
-                'zip_code':'78704',
-                'phone_no':'919-720-7941'
+                'company': 'ASLS',
+                'contact': 'Joe Smith',
+                'line1': '1110 Algarita Ave.',
+                'city': 'Austin',
+                'state': 'TX',
+                'zip_code': '78704',
+                'phone_no': '919-720-7941'
             },
             from_={
-                'company':'ASLS',
-                'contact':'Joe Smith',
-                'line1':'1110 Algarita Ave.',
-                'city':'Austin',
-                'state':'TX',
-                'zip_code':'78704',
-                'phone_no':'919-720-7941'
+                'company': 'ASLS',
+                'contact': 'Joe Smith',
+                'line1': '1110 Algarita Ave.',
+                'city': 'Austin',
+                'state': 'TX',
+                'zip_code': '78704',
+                'phone_no': '919-720-7941'
             },
             packages=[{
-                'weight':1.5,
-                'length':10,
-                'width':6,
-                'height':8,
+                'weight': 1.5,
+                'length': 10,
+                'width': 6,
+                'height': 8,
             }],
             carrier='usps',
             service='2DAY',
@@ -255,6 +255,13 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
         package = postmaster.Package.retrieve(package_id=id_)
         self.assertIsNone(package)
 
+    def testMonitorExternalPackage(self):
+        response = postmaster.Track(
+            tracking_no='1Z1896X70305267337',
+            url='http://http-listener.appspot.com/'
+        ).monitor_external()
+        self.assertEqual(response, {u'status': u'OK'})
+
 
 class PostmasterTestCase_Urlfetch(PostmasterTestCase_Urllib2):
     def setUp(self):
@@ -272,6 +279,5 @@ class PostmasterTestCase_Pycurl(PostmasterTestCase_Urllib2):
         super(PostmasterTestCase_Pycurl, self).setUp()
 
 
-
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(verbosity=2)

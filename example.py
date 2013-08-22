@@ -14,12 +14,12 @@ def create_shipment_simplest():
             'zip_code': '78701',
             'phone_no': '555-123-4452'
         },
-        packages={
+        packages=[{
             'weight': 1.5,
             'length': 10,
             'width': 6,
             'height': 8,
-        },
+        }],
         service='2DAY',
     )
     return shipment
@@ -33,30 +33,32 @@ def create_shipment_international():
             'city': 'Austin',
             'state': 'TX',
             'zip_code': '78701',
-            'phone_no': '555-123-4452'
+            'phone_no': '555-123-4452',
+            'country': 'FR',
         },
-        packages={
+        packages=[{
             'weight': 1.5,
             'length': 10,
             'width': 6,
             'height': 8,
             'customs': {
                 'type': 'Gift',
-                'contents': {
+                'contents': [{
                     'description': 'description',
                     'value': '15',
                     'weight': 2.5,
                     'quantity': 1,
-                }
+                    'country_of_origin': 'AI',
+                }],
             },
-        },
+        }],
         carrier='usps',
-        service='2DAY',
+        service='INTL_SURFACE',
     )
     return shipment
 
 
-def create_shipment_full():
+def create_shipment_complex():
     shipment = postmaster.Shipment.create(
         from_={
             'company': 'ASLS',
@@ -117,36 +119,7 @@ def create_shipment_full():
                     'invoice_number': '050912173216-1234',
                     'comments': 'Comments on the commercial invoice',
                 },
-            },
-            {
-                'weight': 1.5,
-                'length': 10,
-                'width': 6,
-                'height': 8,
-                'customs': {
-                    'type': 'Gift',
-                    'contents': [{
-                            'description': 'description',
-                            'value': '15',
-                            'weight': 2.5,
-                            'weight_units': 'LB',
-                            'quantity': 1,
-                            'hs_tariff_number': '060110',
-                            'country_of_origin': 'AI',
-                        }, {
-                            'description': 'description',
-                            'value': '15',
-                            'weight': 2.5,
-                            'weight_units': 'LB',
-                            'quantity': 1,
-                            'hs_tariff_number': '060110',
-                            'country_of_origin': 'AI',
-                        },
-                    ],
-                    'invoice_number': '050912173216-1234',
-                    'comments': 'Comments on the commercial invoice',
-                },
-            },
+            }
         ],
         carrier='usps',
         service='2DAY',
@@ -253,17 +226,48 @@ def delete():
     return response
 
 
-if __name__ == '__main__':
+def monitor():
+    response = postmaster.Tracking(
+        tracking_no='1Z1896X70305267337',
+        url='http://example.com/your-listener',
+        events=['Delivered', 'Exception']
+    ).monitor_external()
+    return response
 
-    print create_shipment_simplest()
-    #print create_shipment_international()
-    #print create_shipment_full()
-    #ship()
-    #address()
-    #time()
-    #rate()
-    #box()
-    #fit()
-    #list_shipments()
-    #delete()
-    pass
+
+if __name__ == '__main__':
+    from pprint import pprint
+
+    #Ship = create_shipment_simplest()
+    #print Ship
+    #pprint(Ship._data)
+
+    #Ship = create_shipment_international()
+    #print Ship
+    #pprint(Ship._data)
+
+    #Ship = create_shipment_complex()
+    #print Ship
+    #pprint(Ship._data)
+
+    #Ship = ship()
+    #print Ship
+    #pprint(Ship._data)
+
+    #pprint(address())
+
+    #pprint(time())
+
+    #pprint(rate())
+
+    #pprint(box())
+
+    #Fit = fit()
+    #print Fit
+    #pprint(Fit._data)
+
+    #pprint(list_shipments())
+
+    #print delete()
+
+    #print monitor()

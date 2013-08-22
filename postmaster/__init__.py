@@ -382,5 +382,29 @@ def get_rate(from_zip, to_zip, weight, carrier=None, service='ground'):
 def get_token():
     return HTTPTransport.get('/v1/token')
 
-def monitor_reference():
-    pass
+
+class Track(PostmasterObject):
+
+    PATH = '/v1/track'
+
+    def __init__(self, tracking_no, sms=None, url=None, events=[]):
+        """
+        * tracking_no - Carrier waybill (tracking number)
+        * sms - URL to receive callback with JSON payload  (or url)
+        * url - Phone number to receive notification sms (or sms)
+        * events (optional) - List of events wants to be notified. Options are:
+            In-Transit, Out For Delivery, Delivered, Voided, Exception, Returned
+        """
+        kwargs = dict(
+            tracking_no=tracking_no,
+            events=events,
+        )
+        if url:
+            kwargs['url'] = url
+        else:
+            kwargs['sms'] = sms
+
+        super(Track, self).__init__(**kwargs)
+
+    def monitor_external(self):
+        return self.put()
