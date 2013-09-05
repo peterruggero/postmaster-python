@@ -344,7 +344,7 @@ def validate_address(address_object):
 
 
 def get_transit_time(from_zip, to_zip, weight, carrier=None, commercial=False,
-                     from_country='US', to_country='US'):
+                     from_country=None, to_country=None):
     """
     Find the time needed for a package to get from point A to point B
     """
@@ -360,9 +360,9 @@ def get_transit_time(from_zip, to_zip, weight, carrier=None, commercial=False,
     return tit.put()
 
 
-def get_rate(from_zip, to_zip, weight, carrier=None, service='ground',
-             commercial=False, packaging='CUSTOM',
-             from_country='US', to_country='US'):
+def get_rate(from_zip, to_zip, weight, carrier=None, service=None,
+             commercial=False, packaging=None,
+             from_country=None, to_country=None):
     """
     Find the cost to ship a package from point A to point B.
     """

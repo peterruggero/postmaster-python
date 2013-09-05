@@ -163,12 +163,25 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
 
     def testTimes(self):
         resp = postmaster.get_transit_time(
-            '78704',
-            '78701',
-            '5',
-            'ups'
+            from_zip='78704',
+            to_zip='78701',
+            weight='5',
+            carrier='ups',
         )
         assert resp is not None
+
+    def testTimesInternational(self):
+        resp = postmaster.get_transit_time(
+            from_zip='78704',
+            to_zip='683300',
+            weight='5',
+            carrier='ups',
+            from_country='US',
+            to_country='KR',
+        )
+        self.assertIsNotNone(resp)
+        for service in resp['services']:
+            self.assertTrue(service['service'].startswith('INTL_'))
 
     def testRates(self):
         resp = postmaster.get_rate(
@@ -177,16 +190,41 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
             '5',
             'ups',
         )
-        assert resp is not None
+        self.assertIsNotNone(resp)
 
         resp = postmaster.get_rate(
             '78704',
             '28806',
             '5',
         )
-        assert resp is not None
-        assert 'best' in resp
+        self.assertIsNotNone(resp)
+        self.assertIn('best', resp)
 
+    def testRatesInternational(self):
+        resp = postmaster.get_rate(
+            from_zip='78704',
+            to_zip='683300',
+            from_country='US',
+            to_country='KR',
+            weight='5',
+            carrier='ups',
+        )
+        self.assertIsNotNone(resp)
+        self.assertTrue(resp['service'].startswith('INTL_'))
+
+        resp = postmaster.get_rate(
+            from_zip='78704',
+            to_zip='683300',
+            from_country='US',
+            to_country='KR',
+            weight='5',
+        )
+        self.assertIsNotNone(resp)
+        self.assertIn('best', resp)
+        for k, v in resp.iteritems():
+            if k == 'best':
+                continue
+            self.assertTrue(v['service'].startswith('INTL_'))
 
     def testPackageCreate(self):
         box = postmaster.Package.create(width=5, height=5, length=5, weight=10)
