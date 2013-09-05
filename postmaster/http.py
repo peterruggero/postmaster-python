@@ -47,6 +47,7 @@ try:
 except ImportError:
     pass
 
+
 class PostmasterError(Exception):
     def __init__(self, message=None, http_body=None, http_status=None, json_body=None):
         super(PostmasterError, self).__init__(message)
@@ -54,11 +55,16 @@ class PostmasterError(Exception):
         self.http_status = http_status
         self.json_body = json_body
 
+
 class APIError(PostmasterError):
     """
     An error with the Postmaster API, 500 or similar.
     """
-    pass
+    def __str__(self):
+        return self.__unicode__()
+    def __unicode__(self):
+        return 'API Error: %s' % (self.http_body)
+
     
 class NetworkError(PostmasterError):
     """
@@ -71,19 +77,22 @@ class AuthenticationError(PostmasterError):
     401 style error
     """
     pass
-    
+
+
 class PermissionError(PostmasterError):
     """
     403 style error.
     """
     pass
-    
+
+
 class InvalidDataError(PostmasterError):
     """
     400 style error.
     """
     pass
-    
+
+
 class HTTPTransport(object):
     
     @classmethod
@@ -117,7 +126,7 @@ class HTTPTransport(object):
                 if data:
                     data = json.dumps(data)
                 url = '%s%s' % (config.base_url, url)
-                resp = urlfetch.fetch(url, data, method='POST', headers=headers, deadline=10)
+                resp = urlfetch.fetch(url, data, method='POST', headers=headers, deadline=30)
             except urlfetch.DownloadError:
                 raise NetworkError("There was a network error.")
             else:
@@ -128,8 +137,8 @@ class HTTPTransport(object):
             buf = StringIO.StringIO()
             try:
                 c = pycurl.Curl()
-                c.setopt(pycurl.CONNECTTIMEOUT, 10)
-                c.setopt(pycurl.TIMEOUT, 10)
+                c.setopt(pycurl.CONNECTTIMEOUT, 30)
+                c.setopt(pycurl.TIMEOUT, 30)
                 c.setopt(pycurl.WRITEFUNCTION, buf.write)
                 c.setopt(pycurl.POST, 1)
                 if data:
@@ -156,7 +165,7 @@ class HTTPTransport(object):
 
                 request = urllib2.Request('%s%s' % (config.base_url, url), data=data, headers=headers)
                 request.get_method = lambda: 'POST'
-                resp = opener.open(request, timeout=10)
+                resp = opener.open(request, timeout=30)
                 return cls._decode(resp.read(), resp.getcode())
             except urllib2.HTTPError, e:
                 return cls._decode(e.read(), e.getcode())
@@ -173,7 +182,7 @@ class HTTPTransport(object):
                     data = urllib.urlencode(data)
                     url += ('?%s' % data)
 
-                resp = urlfetch.fetch(url, method='GET', headers=headers, deadline=10)
+                resp = urlfetch.fetch(url, method='GET', headers=headers, deadline=30)
             except urlfetch.DownloadError:
                 raise NetworkError("There was a network error.")
             else:
@@ -183,8 +192,8 @@ class HTTPTransport(object):
             buf = StringIO.StringIO()
             try:
                 c = pycurl.Curl()
-                c.setopt(pycurl.CONNECTTIMEOUT, 10)
-                c.setopt(pycurl.TIMEOUT, 10)
+                c.setopt(pycurl.CONNECTTIMEOUT, 30)
+                c.setopt(pycurl.TIMEOUT, 30)
                 c.setopt(pycurl.WRITEFUNCTION, buf.write)
                 url = '%s%s' % (config.base_url, url)
                 if data:
@@ -211,7 +220,7 @@ class HTTPTransport(object):
                     url += ('?%s' % data)
                 request = urllib2.Request(url, headers=headers)
                 request.get_method = lambda: 'GET'
-                resp = opener.open(request, timeout=10)
+                resp = opener.open(request, timeout=30)
                 return cls._decode(resp.read(), resp.getcode())
             except urllib2.HTTPError, e:
                 return cls._decode(e.read(), e.getcode())
@@ -225,7 +234,7 @@ class HTTPTransport(object):
                 if data:
                     data = json.dumps(data)
                 url = '%s%s' % (config.base_url, url)
-                resp = urlfetch.fetch(url, data, method='PUT', headers=headers, deadline=10)
+                resp = urlfetch.fetch(url, data, method='PUT', headers=headers, deadline=30)
             except urlfetch.DownloadError:
                 raise NetworkError("There was a network error.")
             else:
@@ -235,8 +244,8 @@ class HTTPTransport(object):
             buf = StringIO.StringIO()
             try:
                 c = pycurl.Curl()
-                c.setopt(pycurl.CONNECTTIMEOUT, 10)
-                c.setopt(pycurl.TIMEOUT, 10)
+                c.setopt(pycurl.CONNECTTIMEOUT, 30)
+                c.setopt(pycurl.TIMEOUT, 30)
                 c.setopt(pycurl.WRITEFUNCTION, buf.write)
                 c.setopt(pycurl.PUT, 1)
 
@@ -269,7 +278,7 @@ class HTTPTransport(object):
 
                 request = urllib2.Request('%s%s' % (config.base_url, url), data=data, headers=headers)
                 request.get_method = lambda: 'PUT'
-                resp = opener.open(request, timeout=10)
+                resp = opener.open(request, timeout=30)
                 return cls._decode(resp.read(), resp.getcode())
             except urllib2.HTTPError, e:
                 return cls._decode(e.read(), e.getcode())
@@ -286,7 +295,7 @@ class HTTPTransport(object):
                 ## urlfetch doesn't allow you to send body when performing DELETE request
                 ## issue : http://code.google.com/p/googleappengine/issues/detail?id=601
                 url = '%s%s' % (config.base_url, url)
-                resp = urlfetch.fetch(url, data, method='DELETE', headers=headers, deadline=10)
+                resp = urlfetch.fetch(url, data, method='DELETE', headers=headers, deadline=30)
             except urlfetch.DownloadError:
                 raise NetworkError("There was a network error.")
             else:
@@ -296,8 +305,8 @@ class HTTPTransport(object):
             buf = StringIO.StringIO()
             try:
                 c = pycurl.Curl()
-                c.setopt(pycurl.CONNECTTIMEOUT, 10)
-                c.setopt(pycurl.TIMEOUT, 10)
+                c.setopt(pycurl.CONNECTTIMEOUT, 30)
+                c.setopt(pycurl.TIMEOUT, 30)
                 c.setopt(pycurl.WRITEFUNCTION, buf.write)
                 c.setopt(pycurl.CUSTOMREQUEST, 'DELETE')
                 if data:
@@ -324,7 +333,7 @@ class HTTPTransport(object):
 
                 request = urllib2.Request('%s%s' % (config.base_url, url), data=data, headers=headers)
                 request.get_method = lambda: 'DELETE'
-                resp = opener.open(request, timeout=10)
+                resp = opener.open(request, timeout=30)
                 return cls._decode(resp.read(), resp.getcode())
             except urllib2.HTTPError, e:
                 return cls._decode(e.read(), e.getcode())

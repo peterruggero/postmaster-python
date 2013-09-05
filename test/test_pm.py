@@ -45,7 +45,7 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
         resp = address.validate()
         assert resp is not None
 
-    def testShipmentCreateRetrive(self):
+    def testShipmentCreateRetrieve(self):
         shipment1 = postmaster.Shipment.create(
             to={
                 'company': 'Acme Inc.',
@@ -156,7 +156,7 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
                 'width': 6,
                 'height': 8,
             }],
-            carrier='ups',
+            carrier='fedex',
             service='GROUND',
         )
         shipment.track()
@@ -277,7 +277,7 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
         self.assertFalse(status)
 
     def testListShipments(self):
-        self.testShipmentCreateRetrive()
+        self.testShipmentCreateRetrieve()
         shipments, cursor, prev_cursor = postmaster.Shipment.list()
         self.assertGreater(len(shipments), 0)
         self.assertIsInstance(cursor, unicode)
