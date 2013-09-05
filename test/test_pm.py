@@ -156,7 +156,7 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
                 'width': 6,
                 'height': 8,
             }],
-            carrier='fedex',
+            carrier='usps',
             service='GROUND',
         )
         shipment.track()
