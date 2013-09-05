@@ -20,22 +20,19 @@ class PostmasterObject(object):
     Base object for Postmaster.  Allows slightly easlier access to data and
     some REST-like opertations.
     """
-    
     ARGS = []
     PATH = None
-    
+
     def __init__(self, **kwargs):
         if self.ARGS:
             for k in kwargs.iterkeys():
                 if not k in self.ARGS:
                     raise TypeError('%s is an invalid argument for %s.' % (k, self.__class__.__name__))
-                
         self._data = kwargs
 
     def __getattr__(self, name):
         if not name in self._data:
             raise AttributeError("Cannot find attribute.")
-        
         return self._data[name]
         
     def __repr__(self):
@@ -46,13 +43,11 @@ class PostmasterObject(object):
         Put object to server.
         """
         if id_:
-
             response = HTTPTransport.put(
                 action and '%s/%s/%s' % (self.PATH, id_, action) or \
                     '%s/%s' % (self.PATH, id_),
                 self._data, headers=config.headers)
         else:
-
             response = HTTPTransport.post(self.PATH, self._data, headers=config.headers)
         return response
         
@@ -60,7 +55,6 @@ class PostmasterObject(object):
         """
         Get object(s) from server.
         """
-
         if id_:
             response = HTTPTransport.get(
                 action and '%s/%s/%s' % (self.PATH, id_, action) or \
@@ -75,9 +69,7 @@ class PostmasterObject(object):
             url = '%s/%s/%s' % (self.PATH, id_, action)
         else:
             url = '%s/%s' % (self.PATH, id_)
-
         response = HTTPTransport.delete(url, headers=config.headers)
-
         return response
 
 
@@ -94,7 +86,6 @@ class TimeInTransit(PostmasterObject):
 
 
 class Address(PostmasterObject):
-
     PATH = '/v1/validate'
 
     def __init__(self, company=None, contact=None, line1=None, line2=None, line3=None, city=None, state=None, zip_code=None, country=None):
@@ -118,14 +109,13 @@ class Address(PostmasterObject):
 
 
 class Shipment(PostmasterObject):
-
     PATH = '/v1/shipments'
 
     @classmethod
 
     def create(cls, to, packages, service, from_=None, carrier=None, reference=None, options=None):
         """
-        Create a new shipment.
+        Creates a new shipment.
 
         Arguments:
 
@@ -136,14 +126,14 @@ class Shipment(PostmasterObject):
            * city
            * state
            * zip
+         * from (optional) - a dict representing the ship-from address.
+                             Will use default for account if not provided.
          * packages (required) - a dict (or list of dicts) representing the package:
            * weight
            * length
            * width
            * height
-         * from (optional) - a dict representing the ship-from address.
-                             Will use default for account if not provided.
-         * customs (optional)
+           * customs (optional)
         """
 
         shipment = Shipment()
@@ -291,7 +281,7 @@ class Package(PostmasterObject):
         prev_cursor = res['previousCursor']
         packages = res['results']
 
-        packages = [Package(**package) for package in packages]
+        packages = [Package(**p) for p in packages]
 
         return packages, cursor, prev_cursor
 
@@ -353,31 +343,40 @@ def validate_address(address_object):
     pass
 
 
-def get_transit_time(from_zip, to_zip, weight, carrier=None):
+def get_transit_time(from_zip, to_zip, weight, carrier=None, commercial=False,
+                     from_country='US', to_country='US'):
     """
     Find the time needed for a package to get from point A to point B
     """
     tit = TimeInTransit(
         from_zip=from_zip,
         to_zip=to_zip,
+        from_country=from_country,
+        to_country=to_country,
         weight=weight,
         carrier=carrier,
+        commercial=commercial,
     )
     return tit.put()
 
 
-def get_rate(from_zip, to_zip, weight, carrier=None, service='ground'):
+def get_rate(from_zip, to_zip, weight, carrier=None, service='ground',
+             commercial=False, packaging='CUSTOM',
+             from_country='US', to_country='US'):
     """
     Find the cost to ship a package from point A to point B.
     """
     rate = Rate(
         from_zip=from_zip,
         to_zip=to_zip,
+        from_country=from_country,
+        to_country=to_country,
+        commercial=commercial,
         weight=weight,
         carrier=carrier,
         service=service,
+        packaging=packaging,
     )
-
     return rate.put()
 
 
