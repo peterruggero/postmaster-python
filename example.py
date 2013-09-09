@@ -25,39 +25,6 @@ def create_shipment_simplest():
     return shipment
 
 
-def create_shipment_international():
-    shipment = postmaster.Shipment.create(
-        to={
-            'contact': 'Joe Smith',
-            'line1': '701 Brazos St.',
-            'city': 'Austin',
-            'state': 'TX',
-            'zip_code': '78701',
-            'phone_no': '555-123-4452',
-            'country': 'FR',
-        },
-        packages=[{
-            'weight': 1.5,
-            'length': 10,
-            'width': 6,
-            'height': 8,
-            'customs': {
-                'type': 'Gift',
-                'contents': [{
-                    'description': 'description',
-                    'value': '15',
-                    'weight': 2.5,
-                    'quantity': 1,
-                    'country_of_origin': 'AI',
-                }],
-            },
-        }],
-        carrier='usps',
-        service='INTL_SURFACE',
-    )
-    return shipment
-
-
 def create_shipment_complex():
     shipment = postmaster.Shipment.create(
         from_={
@@ -149,6 +116,41 @@ def ship():
     )
     return shipment
 
+
+def ship_international():
+    shipment = postmaster.Shipment.create(
+        to={
+            'company': 'Groupe SEB',
+            'contact': 'Joe Smith',
+            'line1': 'Les 4 M - Chemin du Petit Bois',
+            'line2': 'BP 172',
+            'city': 'ECULLY CEDEX',
+            'state': 'TX',
+            'zip_code': '69134',
+            'phone_no': '9197207941',
+            'country': 'FR',
+        },
+        packages=[{
+            'weight': 2.2,
+            'length': 10,
+            'width': 6,
+            'height': 8,
+            'customs': {
+                'type': 'Other',
+                'description': 'Some great stuff.',
+                'contents': [{
+                    'description': 'A Bolt',
+                    'value': 0.34,
+                    'weight': 1,
+                    'quantity': 1,
+                    'country_of_origin': 'FR',
+                }],
+            },
+        }],
+        carrier='fedex',
+        service='INTL_PRIORITY',
+    )
+    return shipment
 
 def address():
     address = postmaster.Address(
@@ -242,15 +244,15 @@ if __name__ == '__main__':
     #print Ship
     #pprint(Ship._data)
 
-    #Ship = create_shipment_international()
-    #print Ship
-    #pprint(Ship._data)
-
     #Ship = create_shipment_complex()
     #print Ship
     #pprint(Ship._data)
 
     #Ship = ship()
+    #print Ship
+    #pprint(Ship._data)
+
+    #Ship = ship_international()
     #print Ship
     #pprint(Ship._data)
 
