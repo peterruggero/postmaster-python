@@ -10,7 +10,7 @@ README = open(os.path.join(here, 'README.md')).read()
 requires = [
 ]
 
-setup(name='postmaster-python',
+setup(name='postmaster',
       version=VERSION,
       description='Library for postmaster.io service',
       long_description=README,
