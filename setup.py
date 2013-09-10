@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 from postmaster.version import VERSION
 
 here = os.path.abspath(os.path.dirname(__file__))
-README = open(os.path.join(here, 'README.md')).read()
+README = open(os.path.join(here, 'README.txt')).read()
 
 
 requires = [
@@ -23,4 +23,3 @@ setup(name='postmaster',
       test_suite='test',
       install_requires=requires,
       )
-
