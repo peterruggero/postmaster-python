@@ -20,6 +20,6 @@ setup(name='postmaster',
       packages=find_packages(),
       include_package_data=True,
       zip_safe=False,
-      test_suite='test',
+      test_suite='test.__init__',
       install_requires=requires,
       )
