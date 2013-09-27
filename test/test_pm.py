@@ -1,8 +1,6 @@
 import os
-import sys
 import unittest
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 try:
     import json
@@ -17,6 +15,7 @@ from postmaster.http import *
 
 
 HTTPBIN = os.environ.get('HTTPBIN_URL', 'http://httpbin.org/')
+
 
 class PostmasterTestCase_Urllib2(unittest.TestCase):
     def setUp(self):
@@ -325,7 +324,3 @@ class PostmasterTestCase_Pycurl(PostmasterTestCase_Urllib2):
     def setUp(self):
         postmaster.http.HTTP_LIB = 'pycurl'
         super(PostmasterTestCase_Pycurl, self).setUp()
-
-
-if __name__ == '__main__':
-    unittest.main(verbosity=2)
