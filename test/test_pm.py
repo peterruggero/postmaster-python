@@ -180,7 +180,7 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
         )
         self.assertIsNotNone(resp)
         for service in resp['services']:
-            self.assertTrue(service['service'].startswith('INTL_'))
+            self.assertIsInstance(service['delivery_timestamp'], int)
 
     def testRates(self):
         resp = postmaster.get_rate(
@@ -303,11 +303,19 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
         self.assertIsNone(package)
 
     def testMonitorExternalPackage(self):
+
+        tracking = '1Z1896X70305267337'
+        events = ['Voided']
+
         response = postmaster.Track(
-            tracking_no='1Z1896X70305267337',
-            url='http://http-listener.appspot.com/'
+            tracking_no=tracking,
+            events=events,
         ).monitor_external()
-        self.assertEqual(response, {u'status': u'OK'})
+
+        self.assertTrue(response['ended'])
+        self.assertEqual(tracking, response['tracking'])
+        self.assertEqual(events, response['events'])
+
 
 
 class PostmasterTestCase_Urlfetch(PostmasterTestCase_Urllib2):
