@@ -38,16 +38,6 @@ except ImportError:
         except ImportError:
             raise
 
-try:
-    # it could be testing instance, import all libraries
-    # each TestCase will choose one using HTTP_LIB
-    import urllib2
-    import pycurl
-    from google.appengine.api import urlfetch
-except ImportError:
-    pass
-
-
 class PostmasterError(Exception):
     def __init__(self, message=None, http_body=None, http_status=None, json_body=None):
         super(PostmasterError, self).__init__(message)
@@ -65,7 +55,7 @@ class APIError(PostmasterError):
     def __unicode__(self):
         return 'API Error: %s' % (self.http_body)
 
-    
+
 class NetworkError(PostmasterError):
     """
     An error with your network connectivity.
@@ -94,34 +84,34 @@ class InvalidDataError(PostmasterError):
 
 
 class HTTPTransport(object):
-    
+
     @classmethod
     def _decode(cls, response_data, response_code):
         if response_code >= 500:
             raise APIError("There was an API error.", http_body=response_data)
-            
+
         try:
             data = json.loads(response_data)
             if response_code > 299:
                 data = data['message']
         except (ValueError, KeyError):
             data = response_data
-            
+
         if response_code == 400:
             raise InvalidDataError(data, json_body=response_data)
         elif response_code == 401:
             raise AuthenticationError(data, json_body=response_data)
         elif response_code == 403:
             raise PermissionError(data, json_body=response_data)
-            
+
         return data
-    
-    @classmethod  
+
+    @classmethod
     def post(cls, url, data=None, headers=None):
         # Pass data in already encoded, valid data is returned as a dict
         headers = headers if headers else {}
         headers.update(config.headers)
-        if HTTP_LIB == 'urlfetch': 
+        if HTTP_LIB == 'urlfetch':
             try:
                 if data:
                     data = json.dumps(data)
@@ -131,8 +121,8 @@ class HTTPTransport(object):
                 raise NetworkError("There was a network error.")
             else:
                 return cls._decode(resp.content, resp.status_code)
-                
-        elif HTTP_LIB == 'pycurl': 
+
+        elif HTTP_LIB == 'pycurl':
             import StringIO
             buf = StringIO.StringIO()
             try:
@@ -146,7 +136,7 @@ class HTTPTransport(object):
                 c.setopt(pycurl.POSTFIELDS, data or '')
                 url = '%s%s' % (config.base_url, url)
                 c.setopt(c.URL, url)
-                
+
                 if headers:
                     c.setopt(c.HTTPHEADER, ['%s: %s' % (k,v) for k,v in headers.iteritems()])
                 c.setopt(c.FAILONERROR, False)
@@ -157,7 +147,7 @@ class HTTPTransport(object):
                 errno, errstr = error
             else:
                 return cls._decode(buf.getvalue(), status_code)
-        elif HTTP_LIB == 'urllib2': 
+        elif HTTP_LIB == 'urllib2':
             try:
                 opener = urllib2.build_opener(urllib2.HTTPHandler)
                 if data:
@@ -169,8 +159,8 @@ class HTTPTransport(object):
                 return cls._decode(resp.read(), resp.getcode())
             except urllib2.HTTPError, e:
                 return cls._decode(e.read(), e.getcode())
-            
-    @classmethod  
+
+    @classmethod
     def get(cls, url, data=None, headers=None):
         headers = headers if headers else {}
         headers.update(config.headers)
@@ -225,7 +215,7 @@ class HTTPTransport(object):
             except urllib2.HTTPError, e:
                 return cls._decode(e.read(), e.getcode())
 
-    @classmethod  
+    @classmethod
     def put(cls, url, data=None, headers=None):
         headers = headers if headers else {}
         headers.update(config.headers)

@@ -19,6 +19,8 @@ class UrlLib2TestCase(unittest.TestCase):
     def setUp(self):
         super(UrlLib2TestCase, self).setUp()
         postmaster.http.HTTP_LIB = 'urllib2'
+        import urllib2
+        postmaster.http.urllib2 = urllib2
         postmaster.config.base_url = HTTPBIN
 
     def testEmptyPost(self):
