@@ -202,17 +202,16 @@ def fit():
             'length': 3,
             'height': 1,
             'count': 2,
+            'sku': '123ABC',
         }],
         packages=[{
             'width': 6,
             'length': 6,
             'height': 6,
-            'sku': '123ABC',
         }, {
             'width': 12,
             'length': 12,
             'height': 12,
-            'sku': '456XYZ',
         }]
     )
     return response
