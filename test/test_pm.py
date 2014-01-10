@@ -21,6 +21,8 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
     def setUp(self):
         super(PostmasterTestCase_Urllib2, self).setUp()
         postmaster.http.HTTP_LIB = 'urllib2'
+        import urllib2
+        postmaster.http.urllib2 = urllib2
         postmaster.config.base_url = os.environ.get('PM_API_HOST', 'http://localhost:8000')
         postmaster.config.api_key = os.environ.get('PM_API_KEY', 'tt_MTAwMTptNW5STDZQWVY5ZGxoVlBEdDZ4N1BzNDFIUmc')
 
@@ -321,14 +323,18 @@ class PostmasterTestCase_Urllib2(unittest.TestCase):
 class PostmasterTestCase_Urlfetch(PostmasterTestCase_Urllib2):
     def setUp(self):
         super(PostmasterTestCase_Urlfetch, self).setUp()
-        from google.appengine.api import apiproxy_stub_map, urlfetch_stub
+        from google.appengine.api import (apiproxy_stub_map, urlfetch_stub,
+            urlfetch)
 
         apiproxy_stub_map.apiproxy = apiproxy_stub_map.APIProxyStubMap()
         apiproxy_stub_map.apiproxy.RegisterStub('urlfetch', urlfetch_stub.URLFetchServiceStub())
         postmaster.http.HTTP_LIB = 'urlfetch'
+        postmaster.http.urlfetch = urlfetch
 
 
 class PostmasterTestCase_Pycurl(PostmasterTestCase_Urllib2):
     def setUp(self):
         postmaster.http.HTTP_LIB = 'pycurl'
+        import pycurl
+        postmaster.http.pycurl = pycurl
         super(PostmasterTestCase_Pycurl, self).setUp()
