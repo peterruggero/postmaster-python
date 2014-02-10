@@ -103,8 +103,7 @@ class Shipment(PostmasterObject):
     PATH = '/v1/shipments'
 
     @classmethod
-
-    def create(cls, to, packages, service, from_=None, carrier=None, reference=None, options=None):
+    def create(cls, to, packages, service, from_=None, carrier=None, reference=None, options=None, label=None):
         """
         Creates a new shipment.
 
@@ -142,6 +141,8 @@ class Shipment(PostmasterObject):
             shipment._data['reference'] = reference
         if options:
             shipment._data['options'] = options
+        if label:
+            shipment._data['label'] = label
 
         resp = shipment.put()
 
