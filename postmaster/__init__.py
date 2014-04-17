@@ -354,7 +354,9 @@ def get_transit_time(from_zip, to_zip, weight, carrier=None, commercial=False,
 
 def get_rate(from_zip, to_zip, weight, carrier=None, service=None,
              commercial=False, packaging=None,
-             from_country=None, to_country=None):
+             from_country=None, to_country=None,
+             width=None, length=None,
+             height=None, dimension_units=None):
     """
     Find the cost to ship a package from point A to point B.
     """
@@ -368,6 +370,10 @@ def get_rate(from_zip, to_zip, weight, carrier=None, service=None,
         carrier=carrier,
         service=service,
         packaging=packaging,
+        width=width,
+        length=length,
+        height=height,
+        dimension_units=dimension_units,
     )
     return rate.put()
 
